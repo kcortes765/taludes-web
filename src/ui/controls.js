@@ -22,6 +22,9 @@
   Controls.setUnits = function (u) {
     _units = u === 'imperial' ? 'imperial' : 'si';
     updateLabels();
+    document.querySelectorAll('.unit-btn').forEach(function (btn) {
+      btn.classList.toggle('active', btn.dataset.units === _units);
+    });
     Object.keys(_paramInputs).forEach(function (key) {
       var p = _paramInputs[key];
       applyBounds(p);
@@ -34,6 +37,7 @@
     if (state.height != null && state.slopeAngle != null) {
       Controls.updateDynamicRanges(state.height, state.slopeAngle);
     }
+    if (state.units) Controls.setUnits(state.units);
     var keys = ['height', 'slopeAngle', 'gamma', 'cohesion', 'friction',
                 'waterTable', 'numSlices', 'circleX', 'circleY', 'circleR'];
     for (var i = 0; i < keys.length; i++) {
