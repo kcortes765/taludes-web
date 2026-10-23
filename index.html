@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TALUDES — Análisis de Estabilidad</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-layout">
+
+    <!-- HEADER -->
+    <header class="app-header">
+      <h1>TALUDES</h1>
+      <div class="header-actions">
+        <div class="toggle-group">
+          <button class="unit-btn active" data-units="si">SI</button>
+          <button class="unit-btn" data-units="imperial">Imperial</button>
+        </div>
+        <button class="btn btn-sm" id="btn-dark-mode">Oscuro</button>
+        <button class="btn btn-sm" id="btn-help">?</button>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="app-main">
+
+      <!-- LEFT PANEL: Parameters -->
+      <div class="panel panel-left" id="panel-params">
+
+        <!-- Scenarios -->
+        <div class="panel-section">
+          <h3>Escenarios</h3>
+          <div id="scenarios-list"></div>
+        </div>
+
+        <!-- Geometry -->
+        <div class="panel-section">
+          <h3>Geometría</h3>
+
+          <div class="param-row" id="param-height">
+            <div class="param-label">
+              <span>Altura</span>
+              <span class="param-unit" data-unit="m">m</span>
+            </div>
+            <div class="param-controls">
+              <input type="range" value="10" step="0.5">
+              <input type="number" value="10">
+            </div>
+          </div>
+
+          <div class="param-row" id="param-slopeAngle">
+            <div class="param-label">
+              <span>Ángulo del talud</span>
+              <span class="param-unit" data-unit="°">°</span>
+            </div>
+            <div class="param-controls">
+              <input type="range" value="45" step="1">
+              <input type="number" value="45">
+            </div>
+          </div>
+        </div>
+
+        <!-- Soil -->
+        <div class="panel-section">
+          <h3>Suelo</h3>
+
+          <div class="toggle-group">
+            <button class="drained-btn active" data-mode="drained">Drenado (Efectivo)</button>
+            <button class="drained-btn" data-mode="undrained">No Drenado (Total)</button>
+          </div>
+
+          <div class="param-row" id="param-gamma">
+            <div class="param-label">
+              <span>Peso unitario γ</span>
+              <span class="param-unit" data-unit="kN/m³">kN/m³</span>
+            </div>
+            <div class="param-controls">
+              <input type="range" value="18" step="0.1">
+              <input type="number" value="18">
+            </div>
+          </div>
+
+          <div class="param-row" id="param-cohesion">
+            <div class="param-label">
+              <span id="label-cohesion">Cohesión c</span>
+              <span class="param-unit" data-unit="kPa">kPa</span>
+            </div>
+            <div class="param-controls">
+              <input type="range" value="10" step="0.5">
+              <input type="number" value="10">
+            </div>
+          </div>
+
+          <div class="param-row" id="param-friction">
+            <div class="param-label">
+              <span>Fricción φ</span>
+              <span class="param-unit" data-unit="°">°</span>
+            </div>
+            <div class="param-controls">
+              <input type="range" value="30" step="0.5">
+              <input type="number" value="30">
+            </div>
+          </div>
+        </div>
+
+        <!-- Water -->
+        <div class="panel-section">
+          <h3>Agua</h3>
+
+          <div class="param-row" id="param-waterTable">
+            <div class="param-label">
+              <span>Nivel freático</span>
+              <span class="param-unit" data-unit="m">m</span>
+            </div>
+            <div class="param-controls">
+              <input type="range" value="3" step="0.1">
+              <input type="number" value="3">
+            </div>
+          </div>
+        </div>
+
+        <!-- Analysis -->
+        <div class="panel-section">
+          <h3>Análisis</h3>
+
+          <div class="toggle-group">
+            <button class="method-btn" data-method="fellenius">Fellenius</button>
+            <button class="method-btn active" data-method="bishop">Bishop</button>
+          </div>
+
+          <div class="param-row" id="param-numSlices">
+            <div class="param-label">
+              <span>Dovelas</span>
+              <span class="param-unit"></span>
+            </div>
+            <div class="param-controls">
+              <input type="range" value="15" step="1">
+              <input type="number" value="15">
+            </div>
+          </div>
+        </div>
+
+        <!-- Circle -->
+        <div class="panel-section">
+          <h3>Círculo de Falla</h3>
+
+          <div class="param-row" id="param-circleX">
+            <div class="param-label">
+              <span>Centro X</span>
+              <span class="param-unit" data-unit="m">m</span>
+            </div>
+            <div class="param-controls">
+              <input type="range" value="0" step="0.1">
+              <input type="number" value="0">
+            </div>
+          </div>
+
+          <div class="param-row" id="param-circleY">
+            <div class="param-label">
+              <span>Centro Y</span>
+              <span class="param-unit" data-unit="m">m</span>
+            </div>
+            <div class="param-controls">
+              <input type="range" value="15" step="0.1">
+              <input type="number" value="15">
+            </div>
+          </div>
+
+          <div class="param-row" id="param-circleR">
+            <div class="param-label">
+              <span>Radio R</span>
+              <span class="param-unit" data-unit="m">m</span>
+            </div>
+            <div class="param-controls">
+              <input type="range" value="18" step="0.1">
+              <input type="number" value="18">
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-search-critical" style="width:100%;margin-top:6px;">
+            Buscar Círculo Crítico
+          </button>
+          <div id="search-progress"></div>
+        </div>
+
+      </div>
+
+      <!-- CENTER: Canvas -->
+      <div class="canvas-wrapper">
+        <div id="canvas-container">
+          <canvas id="main-canvas"></canvas>
+        </div>
+        <div id="scenario-context"></div>
+      </div>
+
+      <!-- RIGHT PANEL: Results -->
+      <div class="panel panel-right" id="panel-results">
+
+        <!-- FS Display -->
+        <div class="fs-display">
+          <div id="fs-value">—</div>
+          <div class="fs-bar"><div id="fs-bar-fill"></div></div>
+          <div id="fs-status" class="fs-status"></div>
+          <div id="fs-method"></div>
+        </div>
+
+        <div id="calc-warning"></div>
+        <div id="analytical-note"></div>
+
+        <div class="fs-references">
+          <div><span style="color:var(--green)">●</span> FS ≥ 1.5 — Margen alto en este cálculo</div>
+          <div><span style="color:var(--yellow)">●</span> FS 1.0-1.5 — Margen reducido</div>
+          <div><span style="color:var(--red)">●</span> FS &lt; 1.0 — Inestable (falla)</div>
+          <div>Cálculo 2D preliminar, suelo homogéneo y falla circular. Los umbrales son orientativos.</div>
+        </div>
+
+        <!-- Comparison -->
+        <div id="comparison-panel"></div>
+
+        <!-- Sensitivity -->
+        <div class="panel-section">
+          <h3>Sensibilidad</h3>
+          <div class="sensitivity-buttons">
+            <button class="btn btn-sm btn-sensitivity" data-param="cohesion">Cohesión</button>
+            <button class="btn btn-sm btn-sensitivity" data-param="friction">Fricción</button>
+            <button class="btn btn-sm btn-sensitivity" data-param="waterTable">Nivel freático</button>
+            <button class="btn btn-sm btn-sensitivity" data-param="slopeAngle">Ángulo talud</button>
+          </div>
+          <div id="sensitivity-panel"></div>
+        </div>
+
+        <!-- Risk Analysis (auto Monte Carlo) -->
+        <div class="panel-section">
+          <h3>Análisis de Riesgo</h3>
+          <div id="mc-results"></div>
+          <details class="mc-config-section" id="mc-config-details">
+            <summary>Configurar incertidumbre</summary>
+            <div id="mc-config"></div>
+          </details>
+        </div>
+
+        <!-- Slices Table -->
+        <div class="panel-section">
+          <h3>Tabla de Dovelas</h3>
+          <div class="table-container">
+            <table class="slices-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Peso<br>(kN)</th>
+                  <th>α</th>
+                  <th>u<br>(kPa)</th>
+                  <th>Resist.<br>(kN)</th>
+                  <th>F.motriz<br>(kN)</th>
+                </tr>
+              </thead>
+              <tbody id="slices-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="panel-section">
+          <h3>Acciones</h3>
+          <div class="actions-group">
+            <button class="btn btn-sm" id="btn-compare">Comparar Métodos</button>
+            <button class="btn btn-sm" id="btn-export-img">Exportar PNG</button>
+            <button class="btn btn-sm" id="btn-export-pdf">Exportar PDF</button>
+            <button class="btn btn-sm" id="btn-share">Compartir URL</button>
+            <button class="btn btn-sm" id="btn-reset">Reiniciar</button>
+          </div>
+        </div>
+
+        <!-- Saved -->
+        <div class="panel-section">
+          <h3>Mis Análisis</h3>
+          <button class="btn btn-sm" id="btn-save-analysis" style="margin-bottom:6px;">Guardar Actual</button>
+          <div id="saved-analyses"></div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="app-footer">
+      <span id="onboarding-bar"></span>
+    </footer>
+
+    <!-- GUIDE PANEL (slide-in) -->
+    <div id="guide-panel"></div>
+
+  </div>
+
+  <!-- Scripts (dependency order) -->
+  <script src="src/constants.js"></script>
+  <script src="src/core/geometry.js"></script>
+  <script src="src/core/calculations.js"></script>
+  <script src="src/state.js"></script>
+  <script src="src/canvas/renderer.js"></script>
+  <script src="src/canvas/interactions.js"></script>
+  <script src="src/ui/controls.js"></script>
+  <script src="src/ui/results.js"></script>
+  <script src="src/ui/tooltip.js"></script>
+  <script src="src/ui/scenarios.js"></script>
+  <script src="src/ui/sensitivity.js"></script>
+  <script src="src/analysis/montecarlo.js"></script>
+  <script src="src/utils/storage.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>
