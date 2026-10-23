@@ -83,7 +83,7 @@
     if (_warningEl) {
       var warnings = [];
       if (result.mAlphaWarning) {
-        warnings.push('mα clampeado en algunas dovelas. Resultado aproximado.');
+        warnings.push('Se limitó el valor de mα en algunas dovelas. Resultado aproximado.');
       }
       if (!result.converged) {
         warnings.push('Bishop no convergió. Resultado aproximado. Probar otro círculo o usar Fellenius.');

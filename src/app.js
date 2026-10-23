@@ -552,9 +552,9 @@
     if (!bar) return;
 
     var tips = [
-      'Arrastrá un parámetro para ver cómo cambia la estabilidad del talud.',
-      'Hacé click en el talud para mover el centro del círculo de falla.',
-      'Probá "Buscar Círculo Crítico" para encontrar la configuración más desfavorable.',
+      'Ajusta un parámetro para ver cómo cambia el factor de seguridad.',
+      'Haz clic en el gráfico para mover el centro del círculo de falla.',
+      'Usa la búsqueda del círculo crítico para explorar superficies con menor factor de seguridad.',
       null // done
     ];
 
@@ -629,7 +629,7 @@
       var fullURL = window.location.origin + url;
       if (navigator.clipboard) {
         navigator.clipboard.writeText(fullURL).then(function () {
-          btn.textContent = 'Copiado!';
+          btn.textContent = 'Enlace copiado';
           setTimeout(function () { btn.textContent = 'Compartir URL'; }, 2000);
         });
       } else {

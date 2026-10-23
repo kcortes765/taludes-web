@@ -50,7 +50,7 @@
 
     if (slice.mAlphaWarning) {
       lines.push('');
-      lines.push('<span class="warning-text">mα limitado (clamp activo)</span>');
+      lines.push('<span class="warning-text">mα limitado: resultado aproximado</span>');
     }
 
     _el.innerHTML = lines.join('<br>');

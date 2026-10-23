@@ -105,12 +105,12 @@
       name: 'Terraplén sobre Arcilla',
       subtitle: 'Suelo cohesivo, nivel freático elevado.',
       params: { height: 6, slopeAngle: 30, gamma: 16, cohesion: 25, friction: 15, waterTable: 4, numSlices: 15 },
-      lesson: 'Estabilidad depende del balance cohesión vs presión de poros.',
+      lesson: 'La estabilidad depende del equilibrio entre cohesión y presión de poros.',
       question: 'Evaluar impacto del NF en el FS.'
     },
     urban_excavation: {
       name: 'Excavación Urbana',
-      subtitle: 'Corte profundo, ángulo sub-vertical, presencia de agua.',
+      subtitle: 'Corte profundo, ángulo subvertical, presencia de agua.',
       params: { height: 12, slopeAngle: 75, gamma: 18, cohesion: 15, friction: 28, waterTable: 6, numSlices: 15 },
       lesson: 'Requiere suelo competente o contención. FS típicamente bajo.',
       question: 'Evaluar c necesaria para FS > 1.5 sin contención.'
@@ -204,8 +204,8 @@
     'r': { action: 'reset', desc: 'Reiniciar a valores por defecto' },
     'c': { action: 'criticalSearch', desc: 'Buscar círculo crítico' },
     'f': { action: 'toggleMethod', desc: 'Alternar Fellenius/Bishop' },
-    's': { action: 'toggleSensitivity', desc: 'Toggle sensibilidad' },
-    'm': { action: 'toggleComparison', desc: 'Toggle comparación de métodos' },
+    's': { action: 'toggleSensitivity', desc: 'Mostrar u ocultar el análisis de sensibilidad' },
+    'm': { action: 'toggleComparison', desc: 'Mostrar u ocultar la comparación de métodos' },
     '1': { action: 'scenario:0', desc: 'Caso de Validación' },
     '2': { action: 'scenario:1', desc: 'Corte de Carretera' },
     '3': { action: 'scenario:2', desc: 'Terraplén sobre Arcilla' },

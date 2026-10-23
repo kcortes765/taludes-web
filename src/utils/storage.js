@@ -180,7 +180,7 @@
 
     // Build a printable page
     var win = window.open('', '_blank');
-    if (!win) { alert('Habilite ventanas emergentes para exportar PDF.'); return; }
+    if (!win) { alert('Permite las ventanas emergentes para exportar a PDF.'); return; }
 
     var sliceRows = '';
     if (result.slices) {
