@@ -2050,7 +2050,7 @@ body {
   var _ghostCircles = [];
   var _animating = false;
   var _isDark = false;
-  var _viewOptions = { grid: true, slices: true, circle: true, labels: false, weights: false };
+  var _viewOptions = { grid: true, slices: true, circle: true, labels: false, weights: false, fitComparison: false };
   var _zoom = 1;
   var _panX = 0;
   var _panY = 0;
@@ -2127,7 +2127,8 @@ body {
   Renderer.getViewOptions = function () {
     return {
       grid: _viewOptions.grid, slices: _viewOptions.slices, circle: _viewOptions.circle,
-      labels: _viewOptions.labels, weights: _viewOptions.weights
+      labels: _viewOptions.labels, weights: _viewOptions.weights,
+      fitComparison: _viewOptions.fitComparison
     };
   };
 
@@ -2212,6 +2213,17 @@ body {
       return null;
     }
     var bounds = T.Geometry.worldBounds(result.profile, result.circle.cx, result.circle.cy, result.circle.r);
+    if (_viewOptions.fitComparison && _viewOptions.circle) {
+      for (var i = 0; i < _ghostCircles.length; i++) {
+        var ghost = _ghostCircles[i];
+        if (!validCircle(ghost)) continue;
+        var ghostBounds = T.Geometry.worldBounds(result.profile, ghost.cx, ghost.cy, ghost.r);
+        bounds.minX = Math.min(bounds.minX, ghostBounds.minX);
+        bounds.maxX = Math.max(bounds.maxX, ghostBounds.maxX);
+        bounds.minY = Math.min(bounds.minY, ghostBounds.minY);
+        bounds.maxY = Math.max(bounds.maxY, ghostBounds.maxY);
+      }
+    }
     _baseTransform = computeTransform(bounds);
     _transform = {
       scale: _baseTransform.scale * _zoom,
@@ -2220,6 +2232,10 @@ body {
       cw: _baseTransform.cw, ch: _baseTransform.ch
     };
     return _transform;
+  }
+
+  function validCircle(circle) {
+    return circle && [circle.cx, circle.cy, circle.r].every(Number.isFinite) && circle.r > 0;
   }
 
   Renderer.canvasToWorld = function (px, py) {
@@ -2489,6 +2505,7 @@ body {
     _ctx.save();
     for (var i = 0; i < _ghostCircles.length; i++) {
       var gc = _ghostCircles[i];
+      if (!validCircle(gc)) continue;
       var p = w2c(tx, gc.cx, gc.cy);
       var rr = gc.r * tx.scale;
       var alpha = gc.opacity || 0.15;
@@ -2501,10 +2518,16 @@ body {
       _ctx.stroke();
 
       // FS label
-      if (gc.showFS) {
+      if (gc.showFS && Number.isFinite(gc.fs)) {
         _ctx.fillStyle = 'rgba(' + color + ',' + (alpha + 0.2) + ')';
         _ctx.font = '10px monospace';
-        _ctx.fillText(gc.fs.toFixed(2), p.x - 12, p.y - rr - 4);
+        var labelX = p.x - 12;
+        var labelY = p.y - rr - 4;
+        if (_viewOptions.fitComparison) {
+          labelX = Math.max(6, Math.min(tx.cw - 36, labelX));
+          labelY = Math.max(14, Math.min(tx.ch - 6, labelY));
+        }
+        _ctx.fillText(gc.fs.toFixed(2), labelX, labelY);
       }
     }
     _ctx.setLineDash([]);
@@ -3168,7 +3191,7 @@ body {
   $('reference-radius').textContent=fmt(circle.r,5)+' m';
   view.init($('main-canvas'),$('canvas-container'));
   view.setDark(false);
-  view.setViewOptions({labels:true});
+  view.setViewOptions({labels:true,fitComparison:true});
   tableData(null);
   runReference();
 }());
