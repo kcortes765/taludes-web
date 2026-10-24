@@ -1,0 +1,2829 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TALUDES · 14 m</title>
+  <style>/* =============================================
+   TALUDES — Styles
+   ============================================= */
+
+/* --- CSS Variables --- */
+:root {
+  --bg: #f5f5f5;
+  --bg-panel: #ffffff;
+  --bg-hover: #f0f0f0;
+  --text: #333333;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  --border: #e0e0e0;
+  --border-light: #eee;
+  --accent: #2980B9;
+  --accent-hover: #2471a3;
+  --green: #27AE60;
+  --yellow: #F39C12;
+  --red: #E74C3C;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --radius: 6px;
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+}
+
+[data-theme="dark"] {
+  --bg: #121212;
+  --bg-panel: #1e1e1e;
+  --bg-hover: #2a2a2a;
+  --text: #e0e0e0;
+  --text-secondary: #aaaaaa;
+  --text-muted: #777777;
+  --border: #333333;
+  --border-light: #2a2a2a;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  color-scheme: dark;
+}
+
+/* --- Reset --- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-x: hidden;
+  height: 100vh;
+}
+
+/* --- Main Layout --- */
+.app-layout {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  z-index: 10;
+}
+
+.app-header h1 {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.app-main {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  gap: 0;
+  overflow: hidden;
+}
+
+.app-footer {
+  padding: 6px 16px;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+/* --- Panels --- */
+.panel {
+  background: var(--bg-panel);
+  overflow-y: auto;
+  padding: 10px 12px;
+  border-right: 1px solid var(--border);
+}
+
+.panel:last-child { border-right: none; border-left: 1px solid var(--border); }
+
+.panel-section {
+  margin-bottom: 14px;
+}
+
+.panel-section h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* --- Canvas --- */
+.canvas-wrapper {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+#canvas-container {
+  width: 100%;
+  height: 100%;
+}
+
+#main-canvas {
+  display: block;
+  cursor: crosshair;
+}
+
+/* --- Scenario Context Overlay --- */
+#scenario-context {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  max-width: 400px;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+#scenario-context.show { opacity: 1; }
+
+.context-content {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  box-shadow: var(--shadow);
+  position: relative;
+  font-size: 12px;
+}
+
+.context-content strong { display: block; margin-bottom: 4px; font-size: 13px; }
+.context-content p { margin: 4px 0; }
+.context-question { color: var(--accent); }
+.context-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+/* --- Parameter Inputs --- */
+.param-row {
+  margin-bottom: 8px;
+}
+
+.param-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 2px;
+  font-size: 12px;
+}
+
+.param-label span:first-child { color: var(--text-secondary); }
+.param-unit { color: var(--text-muted); font-size: 11px; }
+
+.param-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.param-controls input[type="range"] {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+}
+
+.param-controls input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.param-controls input[type="number"] {
+  width: 60px;
+  padding: 2px 4px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  text-align: right;
+  background: var(--bg-panel);
+  color: var(--text);
+}
+
+.param-controls input[type="number"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.param-row.disabled { opacity: 0.4; pointer-events: none; }
+
+/* --- Toggle Buttons --- */
+.toggle-group {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.toggle-group button {
+  flex: 1;
+  padding: 5px 8px;
+  border: none;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-group button.active {
+  background: var(--accent);
+  color: white;
+}
+
+.toggle-group button:hover:not(.active) {
+  background: var(--bg-hover);
+}
+
+/* --- Buttons --- */
+.btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn:hover { background: var(--bg-hover); }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.btn-primary:hover { background: var(--accent-hover); }
+
+.btn-sm { padding: 3px 8px; font-size: 11px; }
+
+.btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+/* --- FS Display --- */
+.fs-display {
+  text-align: center;
+  padding: 12px 0;
+  margin-bottom: 10px;
+}
+
+#fs-value {
+  font-size: 48px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  line-height: 1;
+  transition: color 0.3s;
+}
+
+.fs-bar {
+  height: 6px;
+  background: var(--border-light);
+  border-radius: 3px;
+  margin: 8px 0;
+  overflow: hidden;
+}
+
+#fs-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s, background-color 0.3s;
+}
+
+.fs-status {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.fs-status.stable { color: var(--green); }
+.fs-status.caution { color: var(--yellow); }
+.fs-status.danger { color: var(--red); }
+
+#fs-method {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.fs-references {
+  margin-top: 8px;
+  padding: 6px 8px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.fs-references div { margin: 2px 0; }
+
+/* --- Warnings --- */
+#calc-warning {
+  display: none;
+  padding: 6px 10px;
+  background: #FFF3CD;
+  border: 1px solid #FFEEBA;
+  border-radius: var(--radius);
+  color: #856404;
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+[data-theme="dark"] #calc-warning { background: #3d3000; border-color: #5a4800; color: #FFD43B; }
+
+#analytical-note {
+  display: none;
+  padding: 6px 10px;
+  background: #D4EDDA;
+  border: 1px solid #C3E6CB;
+  border-radius: var(--radius);
+  color: #155724;
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+[data-theme="dark"] #analytical-note { background: #1a3a2a; border-color: #2a5a3a; color: #7dcea0; }
+
+/* Dark mode: ensure all text elements use theme colors */
+[data-theme="dark"] .panel,
+[data-theme="dark"] .panel label,
+[data-theme="dark"] .panel span,
+[data-theme="dark"] .panel p,
+[data-theme="dark"] .panel h3,
+[data-theme="dark"] .panel button:not(.active):not(.btn-primary),
+[data-theme="dark"] .scenario-name,
+[data-theme="dark"] .scenario-sub,
+[data-theme="dark"] .guide-item summary,
+[data-theme="dark"] .context-content,
+[data-theme="dark"] .context-content strong,
+[data-theme="dark"] .comp-explanation {
+  color: var(--text);
+}
+[data-theme="dark"] .param-label span:first-child,
+[data-theme="dark"] .guide-item p,
+[data-theme="dark"] .guide-item ul,
+[data-theme="dark"] .scenario-sub {
+  color: var(--text-secondary);
+}
+[data-theme="dark"] .param-unit,
+[data-theme="dark"] .panel-section h3 {
+  color: var(--text-muted);
+}
+[data-theme="dark"] .slices-table td {
+  color: var(--text);
+}
+[data-theme="dark"] .fs-references {
+  background: var(--bg);
+  color: var(--text-secondary);
+}
+
+/* --- Search Progress --- */
+#search-progress {
+  display: none;
+  padding: 6px 10px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+}
+
+/* --- Slices Table --- */
+.table-container {
+  max-height: 250px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.slices-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.slices-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-panel);
+  padding: 4px 6px;
+  text-align: right;
+  font-weight: 600;
+  border-bottom: 2px solid var(--border);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.slices-table th:first-child { text-align: center; }
+
+.slices-table td {
+  padding: 3px 6px;
+  text-align: right;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.slices-table td:first-child { text-align: center; }
+
+.slices-table tr.slice-good { background: rgba(91,155,213,0.08); }
+.slices-table tr.slice-bad { background: rgba(231,76,60,0.08); }
+.slices-table tr.highlighted {
+  background: rgba(41,128,185,0.15) !important;
+  outline: 1px solid var(--accent);
+}
+
+.slices-table tr:hover { background: var(--bg-hover); cursor: pointer; }
+
+/* --- Comparison Panel --- */
+#comparison-panel {
+  display: none;
+  padding: 10px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+}
+
+.comparison-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 8px;
+}
+
+.comp-method { text-align: center; }
+.comp-label { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 1px; }
+.comp-fs { font-size: 28px; font-weight: 700; font-family: var(--font-mono); }
+.comp-vs { color: var(--text-muted); font-size: 12px; }
+.comp-diff { text-align: center; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+.comp-explanation { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+
+/* --- Scenarios --- */
+#scenarios-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.scenario-card {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+  font-family: var(--font);
+}
+
+.scenario-card:hover { background: var(--bg-hover); border-color: var(--accent); }
+.scenario-card.selected { border-color: var(--accent); background: rgba(41,128,185,0.1); }
+
+.scenario-name { font-size: 11px; font-weight: 600; }
+.scenario-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; line-height: 1.2; }
+
+/* --- Sensitivity --- */
+#sensitivity-panel {
+  display: none;
+  padding: 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+}
+
+.sensitivity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.btn-close-sensitivity {
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 11px;
+}
+.btn-close-sensitivity:hover { color: var(--text); }
+
+.sensitivity-insight {
+  font-size: 12px;
+  color: var(--accent);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.sensitivity-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+/* --- Tooltip --- */
+.slice-tooltip {
+  position: fixed;
+  display: none;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 280px;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.contrib-good { color: var(--accent); font-weight: 600; }
+.contrib-neutral { color: var(--yellow); font-weight: 600; }
+.contrib-bad { color: var(--red); font-weight: 600; }
+.warning-text { color: var(--yellow); font-size: 11px; }
+
+/* --- Guide Panel --- */
+#guide-panel {
+  position: fixed;
+  right: -350px;
+  top: 0;
+  width: 340px;
+  height: 100vh;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border);
+  box-shadow: -4px 0 12px rgba(0,0,0,0.1);
+  padding: 16px;
+  overflow-y: auto;
+  transition: right 0.3s;
+  z-index: 50;
+}
+
+#guide-panel.show { right: 0; }
+
+.guide-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.guide-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0 4px;
+  line-height: 1;
+}
+.guide-close:hover { color: var(--red); }
+
+.guide-item { margin-bottom: 10px; }
+.guide-item summary {
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 0;
+}
+.guide-item p, .guide-item ul {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  padding: 4px 0 4px 8px;
+}
+.guide-item kbd {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+/* --- Monte Carlo / Risk Analysis --- */
+.mc-loading {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 8px 0;
+  text-align: center;
+}
+
+.mc-top-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.mc-top-stat {
+  flex: 1;
+  text-align: center;
+  padding: 6px 4px;
+  background: var(--bg);
+  border-radius: 4px;
+}
+
+.mc-big-number {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  line-height: 1.2;
+}
+
+.mc-big-label {
+  display: block;
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.mc-risk-badge {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+#mc-canvas {
+  width: 100%;
+  height: 220px;
+  display: block;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.mc-details {
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.mc-details summary {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 2px 0;
+}
+
+.mc-stats-detail {
+  padding: 4px 0;
+}
+
+.mc-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-secondary);
+}
+
+.mc-detail-row span:last-child {
+  font-family: var(--font-mono);
+  color: var(--text);
+}
+
+/* Config section */
+.mc-config-section {
+  margin-top: 8px;
+  font-size: 11px;
+}
+
+.mc-config-section summary {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 2px 0;
+}
+
+.mc-config-grid {
+  padding: 6px 0;
+}
+
+.mc-config-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 60px;
+  gap: 4px;
+  font-size: 9px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.mc-config-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 60px;
+  gap: 4px;
+  align-items: center;
+  padding: 2px 0;
+  font-size: 11px;
+  color: var(--text);
+}
+
+.mc-param-val {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.mc-sigma-input {
+  width: 55px;
+  padding: 2px 4px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg);
+  color: var(--text);
+  text-align: center;
+}
+
+.mc-samples-config {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-light);
+}
+
+.mc-apply-btn {
+  width: 100%;
+  margin-top: 6px;
+}
+
+/* --- Saved Analyses --- */
+.saved-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+.saved-load {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 12px;
+  text-align: left;
+  flex: 1;
+  padding: 2px 0;
+}
+.saved-load:hover { text-decoration: underline; }
+.saved-delete {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+}
+.saved-delete:hover { color: var(--red); }
+.saved-empty { color: var(--text-muted); font-size: 11px; font-style: italic; }
+
+/* --- Onboarding Bar --- */
+#onboarding-bar {
+  display: none;
+  text-align: center;
+  color: var(--accent);
+  font-size: 12px;
+}
+
+/* --- Actions --- */
+.actions-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+/* --- Canvas sizing --- */
+.canvas-wrapper { min-height: 400px; }
+
+/* --- Responsive --- */
+@media (max-width: 1200px) {
+  .app-main {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: minmax(300px, 1fr) auto;
+  }
+  .canvas-wrapper {
+    grid-column: 1 / -1;
+    min-height: 300px;
+  }
+  .panel { border-right: none; border-bottom: 1px solid var(--border); }
+  .panel:last-child { border-left: none; border-bottom: none; }
+}
+
+@media (max-width: 768px) {
+  .app-main {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(250px, 40vh) auto auto;
+  }
+  .canvas-wrapper { min-height: 250px; }
+  #scenarios-list { grid-template-columns: 1fr; }
+  #fs-value { font-size: 36px; }
+}
+
+/* --- Print --- */
+@media print {
+  .app-header, .app-footer, .panel:first-child { display: none; }
+  .app-main { grid-template-columns: 1fr; }
+}
+</style>
+  <style>.app-layout{grid-template-rows:auto 1fr}
+.case-title{color:var(--text-secondary);font-size:12px}
+.case-units{background:var(--accent);color:#fff;border-radius:3px;padding:3px 8px;font-size:11px}
+.case-param{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-light);font-size:12px}
+.case-param>span{color:var(--text-secondary)}
+.case-param output{font-family:var(--font-mono);font-weight:600;white-space:nowrap}
+.case-param output small{font-family:var(--font);font-weight:400;font-size:10px;color:var(--text-muted)}
+.case-actions{display:grid;gap:8px;margin-top:16px}
+.case-actions .btn{width:100%;min-height:34px}
+.case-actions .btn:disabled{opacity:.6;cursor:wait}
+#progress{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+#error{font-size:12px;color:var(--red);padding:8px;border:1px solid var(--red);border-radius:var(--radius)}
+.case-figure-title{position:absolute;left:12px;top:10px;z-index:1;font-size:12px;font-weight:500;color:var(--text-secondary);background:rgba(255,255,255,.82);padding:4px 8px;border-radius:3px}
+#main-canvas{cursor:default}
+.case-table-wrap{overflow-x:auto}
+.case-circle-output>div{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:11px;margin:5px 0}
+.case-circle-output dt{color:var(--text-secondary)}
+.case-circle-output dd{font-family:var(--font-mono)}
+.case-results output{color:var(--text);font-size:13px}
+.slices-table tr:hover{cursor:default}
+[hidden]{display:none!important}
+@media(max-width:768px){.panel-left{padding:10px 12px}.case-figure-title{left:8px;top:6px}.case-actions{grid-template-columns:1fr 1fr}.case-actions #progress{grid-column:1/-1}}
+
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <header class="app-header">
+    <h1>TALUDES</h1>
+    <div class="header-actions"><span class="case-title">Talud de 14 m</span><span class="case-units">SI</span></div>
+  </header>
+  <main class="app-main">
+    <aside class="panel panel-left" id="panel-params">
+      <section class="panel-section">
+        <h3>Geometría</h3>
+        <div class="case-param"><span>Altura</span><output>14 <small>m</small></output></div>
+        <div class="case-param"><span>Ángulo del talud</span><output>30 <small>°</small></output></div>
+        <div class="case-param"><span>Espesor</span><output>1 <small>m</small></output></div>
+      </section>
+      <section class="panel-section">
+        <h3>Suelo</h3>
+        <div class="case-param"><span>Peso unitario γ</span><output>16 <small>kN/m³</small></output></div>
+        <div class="case-param"><span>Cohesión c′</span><output>20 <small>kPa</small></output></div>
+        <div class="case-param"><span>Fricción φ′</span><output>20 <small>°</small></output></div>
+      </section>
+      <section class="panel-section">
+        <h3>Agua</h3>
+        <div class="case-param"><span>Presión de poros u</span><output>0 <small>kPa</small></output></div>
+      </section>
+      <section class="panel-section">
+        <h3>Análisis</h3>
+        <div class="case-param"><span>Método</span><output>Fellenius</output></div>
+        <div class="case-param"><span>Dovelas</span><output>7</output></div>
+      </section>
+      <section class="panel-section">
+        <h3>Círculo de referencia</h3>
+        <div class="case-param"><span>Centro X</span><output id="reference-x"></output></div>
+        <div class="case-param"><span>Centro Y</span><output id="reference-y"></output></div>
+        <div class="case-param"><span>Radio</span><output id="reference-radius"></output></div>
+      </section>
+      <section class="panel-section case-actions">
+        <button id="calculate" class="btn btn-primary" type="button">Calcular</button>
+        <button id="search" class="btn btn-primary" type="button">Buscar superficie crítica</button>
+        <output id="progress" aria-live="polite"></output>
+      </section>
+      <p id="error" role="alert" hidden></p>
+    </aside>
+    <section class="canvas-wrapper">
+      <h2 id="figure-heading" class="case-figure-title">Círculo geométrico</h2>
+      <div id="canvas-container"><canvas id="main-canvas"></canvas></div>
+    </section>
+    <aside class="panel panel-right" id="panel-results">
+      <section class="fs-display">
+        <div id="fs-value">—</div>
+        <div class="fs-bar"><div id="fs-bar-fill"></div></div>
+        <div id="fs-method">Fellenius</div>
+      </section>
+      <section class="panel-section case-results" aria-label="Factores de seguridad">
+        <div class="case-param"><span>FS · datos de dovelas</span><output id="fs-tabulated">—</output></div>
+        <div class="case-param"><span>FS · círculo geométrico</span><output id="fs-geometry">—</output></div>
+        <div class="case-param"><span>FS · superficie crítica</span><output id="fs-critical">—</output></div>
+      </section>
+      <section class="panel-section" id="circle-result-section" hidden>
+        <h3>Superficie calculada</h3>
+        <dl class="case-circle-output" id="circle-output"></dl>
+      </section>
+      <section class="panel-section">
+        <h3>Datos de las dovelas</h3>
+        <div class="case-table-wrap"><table class="slices-table">
+          <thead><tr><th>#</th><th>W<br>(kN/m)</th><th>α<br>(°)</th><th>l<br>(m)</th><th>Resist.<br>(kN/m)</th><th>Motriz<br>(kN/m)</th></tr></thead>
+          <tbody id="tabulated-slices"></tbody>
+        </table></div>
+      </section>
+      <section class="panel-section" id="geometric-section" hidden>
+        <h3 id="geometric-heading">Dovelas · círculo geométrico</h3>
+        <div class="case-table-wrap"><table class="slices-table">
+          <thead><tr><th>#</th><th>b<br>(m)</th><th>W<br>(kN/m)</th><th>α<br>(°)</th><th>l<br>(m)</th><th>u<br>(kPa)</th></tr></thead>
+          <tbody id="geometric-slices"></tbody>
+        </table></div>
+      </section>
+    </aside>
+  </main>
+</div>
+<script>
+/* =============================================
+   TALUDES — Constants, Defaults, Scenarios
+   ============================================= */
+(function (global) {
+  'use strict';
+
+  var T = global.Taludes = global.Taludes || {};
+
+  // Physics
+  T.GAMMA_WATER = 9.81; // kN/m³
+
+  // Defaults (Caso de Validación — Escenario Bonus)
+  T.DEFAULTS = {
+    height: 10,
+    slopeAngle: 45,
+    gamma: 18,
+    cohesion: 10,
+    friction: 30,
+    waterTable: 3,
+    numSlices: 15,
+    method: 'bishop',
+    circleX: null,   // auto-calculate
+    circleY: null,
+    circleR: null,
+    drainedMode: true, // true = drained (effective stress), false = undrained (total stress)
+    units: 'si'
+  };
+
+  // Parameter ranges
+  T.RANGES = {
+    height:     { min: 2,   max: 50,  step: 0.5, unit: 'm' },
+    slopeAngle: { min: 10,  max: 85,  step: 1,   unit: '°' },
+    gamma:      { min: 14,  max: 24,  step: 0.1,  unit: 'kN/m³' },
+    cohesion:   { min: 0,   max: 100, step: 0.5, unit: 'kPa' },
+    friction:   { min: 0,   max: 45,  step: 0.5, unit: '°' },
+    waterTable: { min: 0,   max: 50,  step: 0.1, unit: 'm' },
+    numSlices:  { min: 5,   max: 50,  step: 1,   unit: '' },
+    circleX:    { min: -50, max: 50,  step: 0.1, unit: 'm' },
+    circleY:    { min: 0,   max: 80,  step: 0.1, unit: 'm' },
+    circleR:    { min: 2,   max: 80,  step: 0.1, unit: 'm' }
+  };
+
+  // Labels for display
+  T.LABELS = {
+    height: 'Altura',
+    slopeAngle: 'Ángulo del talud',
+    gamma: 'Peso unitario γ',
+    cohesion: 'Cohesión c',
+    friction: 'Fricción φ',
+    waterTable: 'Nivel freático',
+    numSlices: 'Dovelas',
+    circleX: 'Centro X',
+    circleY: 'Centro Y',
+    circleR: 'Radio R'
+  };
+
+  // FS thresholds
+  T.FS_STABLE = 1.5;
+  T.FS_CAUTION = 1.0;
+
+  // Colors
+  T.COLORS = {
+    soil:           '#D4B896',
+    soilBorder:     '#8B7355',
+    soilDark:       '#3A3225',
+    soilDarkBorder: '#5A4A35',
+    water:          '#5B9BD5',
+    waterFill:      'rgba(91,155,213,0.25)',
+    waterLine:      'rgba(91,155,213,0.6)',
+    skyTop:         '#E8F0FE',
+    skyBottom:      '#FFFFFF',
+    skyDarkTop:     '#1a1a2e',
+    skyDarkBottom:  '#16213e',
+    grid:           'rgba(0,0,0,0.06)',
+    gridDark:       'rgba(255,255,255,0.08)',
+    circleSafe:     'rgba(153,153,153,0.4)',
+    circleCaution:  'rgba(230,126,34,0.7)',
+    circleDanger:   '#DC3545',
+    sliceGood:      '#27AE60',  // green - contributes to stability
+    sliceNeutral:   '#F4D03F',  // yellow - neutral
+    sliceBad:       '#E74C3C',  // red - destabilizing
+    fsGreen:        '#27AE60',
+    fsYellow:       '#F39C12',
+    fsRed:          '#E74C3C',
+    center:         '#333333'
+  };
+
+  // Scenarios from SCENARIOS.md
+  T.SCENARIOS = {
+    validation: {
+      name: 'Caso de Validación',
+      subtitle: 'Parámetros estándar para verificación.',
+      params: { height: 10, slopeAngle: 45, gamma: 18, cohesion: 10, friction: 30, waterTable: 3, numSlices: 15 },
+      lesson: 'Configuración estándar para comparación con valores de referencia.',
+      question: 'Referencia: Fellenius ≈ 1.2-1.5, Bishop ≈ 1.3-1.6'
+    },
+    highway_cut: {
+      name: 'Corte de Carretera',
+      subtitle: 'Suelo granular, talud empinado, sin agua.',
+      params: { height: 8, slopeAngle: 60, gamma: 19, cohesion: 5, friction: 35, waterTable: 0, numSlices: 12 },
+      lesson: 'Estabilidad controlada por fricción y geometría del corte.',
+      question: 'Sensible a variaciones de φ y β.'
+    },
+    soft_clay: {
+      name: 'Terraplén sobre Arcilla',
+      subtitle: 'Suelo cohesivo, nivel freático elevado.',
+      params: { height: 6, slopeAngle: 30, gamma: 16, cohesion: 25, friction: 15, waterTable: 4, numSlices: 15 },
+      lesson: 'La estabilidad depende del equilibrio entre cohesión y presión de poros.',
+      question: 'Evaluar impacto del NF en el FS.'
+    },
+    urban_excavation: {
+      name: 'Excavación Urbana',
+      subtitle: 'Corte profundo, ángulo subvertical, presencia de agua.',
+      params: { height: 12, slopeAngle: 75, gamma: 18, cohesion: 15, friction: 28, waterTable: 6, numSlices: 15 },
+      lesson: 'Requiere suelo competente o contención. FS típicamente bajo.',
+      question: 'Evaluar c necesaria para FS > 1.5 sin contención.'
+    },
+    tropical_hillside: {
+      name: 'Ladera Tropical',
+      subtitle: 'Ladera natural, suelo residual, NF variable.',
+      params: { height: 20, slopeAngle: 25, gamma: 17, cohesion: 8, friction: 32, waterTable: 3, numSlices: 20 },
+      lesson: 'Estabilidad condicionada por variación estacional del NF.',
+      question: 'Variar NF para evaluar umbral de inestabilidad.'
+    },
+    failing_slope: {
+      name: 'El Talud que Falla',
+      subtitle: 'Parámetros desfavorables combinados.',
+      params: { height: 15, slopeAngle: 70, gamma: 20, cohesion: 5, friction: 20, waterTable: 10, numSlices: 15 },
+      lesson: 'Combinación de geometría agresiva, suelo débil y NF alto.',
+      question: 'Evaluar qué intervención (geometría, suelo, drenaje) es más efectiva.'
+    }
+  };
+
+  // FS reference context
+  T.FS_REFERENCES = [
+    { fs: 1.5, label: 'Margen alto', desc: 'Umbral orientativo' },
+    { fs: 1.3, label: 'Margen reducido', desc: 'Umbral orientativo' },
+    { fs: 1.0, label: 'Límite', desc: 'Equilibrio precario' }
+  ];
+
+  // Unit conversion factors (SI to Imperial)
+  T.UNIT_FACTORS = {
+    m_to_ft: 3.28084,
+    kN_m3_to_pcf: 6.36587,
+    kPa_to_psf: 20.8854
+  };
+
+  T.IMPERIAL_UNITS = {
+    'm': 'ft',
+    'kN/m³': 'pcf',
+    'kPa': 'psf',
+    '°': '°',
+    '': ''
+  };
+
+  // Bishop convergence parameters
+  T.BISHOP_MAX_ITER = 200;
+  T.BISHOP_TOLERANCE = 0.001;
+  T.BISHOP_RELAXATION = 0.5;
+  T.MALPHA_MIN = 0.2;
+
+  // Critical circle search parameters
+  T.SEARCH_GRID = {
+    xSteps: 15,
+    ySteps: 12,
+    rSteps: 10,
+    xPadding: 0.3,  // fraction of height
+    yMin: 1.1,      // multiplier on height for min Y of center
+    yMax: 3.0,      // multiplier on height for max Y of center
+    rMin: 0.8,      // multiplier on height for min radius
+    rMax: 2.5       // multiplier on height for max radius
+  };
+
+  // Guide content
+  T.GUIDE = {
+    fs: {
+      title: 'Factor de Seguridad (FS)',
+      text: 'Relación entre resistencia disponible y resistencia movilizada para la superficie analizada. FS < 1 indica resistencia insuficiente en este modelo. Los umbrales mostrados son orientativos; el criterio de diseño depende del proyecto.'
+    },
+    fellenius: {
+      title: 'Método de Fellenius',
+      text: 'Método Ordinario de Dovelas. Desprecia las fuerzas entre dovelas y no requiere iteración. Compararlo con Bishop no constituye por sí solo una validación.'
+    },
+    bishop: {
+      title: 'Método de Bishop Simplificado',
+      text: 'Bishop (1955). Considera fuerzas normales entre dovelas. Más preciso que Fellenius, estándar en la práctica. Requiere iteración (convergencia típica en 5-15 ciclos).'
+    },
+    slices: {
+      title: 'Dovelas',
+      text: 'Divisiones verticales de la masa de suelo sobre la superficie de falla circular. Cada dovela tiene peso W, ángulo de base α, presión de poros u. El FS resulta del balance global.'
+    },
+    interpretation: {
+      title: 'Interpretación de resultados',
+      text: 'Cálculo preliminar para suelo homogéneo y superficie circular, con tratamiento simplificado del agua y de grietas de tracción. La búsqueda explora una grilla finita: no garantiza el mínimo global. Monte Carlo considera variables independientes y una superficie fija; su intervalo de confianza mide incertidumbre de muestreo, no incertidumbre del modelo físico.'
+    },
+    colors: {
+      title: 'Colores en el diagrama',
+      text: '<b>Dovelas:</b> verde = estabilizante, amarillo = neutral, rojo = desestabilizante. La peor dovela tiene borde rojo punteado.<br><b>Círculo de falla:</b> gris punteado = FS ≥ 1.5 (estable), naranja = FS 1.0-1.5 (precaución), rojo sólido = FS < 1.0 (peligro).<br><b>Agua:</b> zona azul semitransparente con línea punteada al nivel freático.'
+    }
+  };
+
+  // Keyboard shortcuts
+  T.SHORTCUTS = {
+    'r': { action: 'reset', desc: 'Reiniciar a valores por defecto' },
+    'c': { action: 'criticalSearch', desc: 'Buscar círculo crítico' },
+    'f': { action: 'toggleMethod', desc: 'Alternar Fellenius/Bishop' },
+    's': { action: 'toggleSensitivity', desc: 'Mostrar u ocultar el análisis de sensibilidad' },
+    'm': { action: 'toggleComparison', desc: 'Mostrar u ocultar la comparación de métodos' },
+    '1': { action: 'scenario:0', desc: 'Caso de Validación' },
+    '2': { action: 'scenario:1', desc: 'Corte de Carretera' },
+    '3': { action: 'scenario:2', desc: 'Terraplén sobre Arcilla' },
+    '4': { action: 'scenario:3', desc: 'Excavación Urbana' },
+    '5': { action: 'scenario:4', desc: 'Ladera Tropical' },
+    '6': { action: 'scenario:5', desc: 'El Talud que Falla' }
+  };
+
+})(typeof window !== 'undefined' ? window : global);
+
+</script>
+<script>
+/* =============================================
+   TALUDES — Geometry: slopes, circles, slices
+   ============================================= */
+(function (global) {
+  'use strict';
+
+  var T = global.Taludes = global.Taludes || {};
+  var Geo = T.Geometry = {};
+
+  var DEG = Math.PI / 180;
+
+  // --- Slope Profile ---
+  // Origin at toe. X right, Y up.
+  // Profile: flat base → slope face → flat crest
+  Geo.slopeProfile = function (H, betaDeg) {
+    var beta = betaDeg * DEG;
+    var L = H / Math.tan(beta); // horizontal run of the slope face
+    var ext = Math.max(H * 0.6, 5); // extension beyond toe/crest
+    return {
+      toe:   { x: 0, y: 0 },
+      crest: { x: L, y: H },
+      L: L,
+      H: H,
+      beta: beta,
+      extLeft:  ext,
+      extRight: ext,
+      // Full profile points (left to right)
+      points: [
+        { x: -ext, y: 0 },
+        { x: 0,    y: 0 },
+        { x: L,    y: H },
+        { x: L + ext, y: H }
+      ]
+    };
+  };
+
+  // Y of slope surface at given X
+  Geo.surfaceY = function (profile, x) {
+    if (x <= 0) return 0;
+    if (x >= profile.L) return profile.H;
+    return (x / profile.L) * profile.H; // linear interpolation on slope face
+  };
+
+  // --- Default Circle Position ---
+  Geo.defaultCircle = function (H, betaDeg) {
+    var beta = betaDeg * DEG;
+    var L = H / Math.tan(beta);
+    // Center above and slightly behind slope midpoint
+    var cx = L * 0.35;
+    var cy = H * 1.6;
+    // Radius to encompass the slope
+    var dx = L * 0.5 - cx;
+    var dy = -cy;
+    var r = Math.sqrt(dx * dx + dy * dy) * 1.15;
+    // Ensure circle passes below the toe
+    var rToToe = Math.sqrt(cx * cx + cy * cy);
+    if (r < rToToe * 0.95) r = rToToe * 1.02;
+    return { cx: cx, cy: cy, r: r };
+  };
+
+  // --- Circle-Slope Intersections ---
+  // Find where the circle intersects the slope profile.
+  // Returns { entry: {x,y}, exit: {x,y} } or null if no valid intersection.
+  Geo.circleIntersections = function (profile, cx, cy, r) {
+    var intersections = [];
+
+    // 1) Intersection with base (y = 0, x <= 0)
+    var baseInts = circleLineHorizontal(cx, cy, r, 0);
+    for (var i = 0; i < baseInts.length; i++) {
+      if (baseInts[i].x <= 0.001) intersections.push(baseInts[i]);
+    }
+
+    // 2) Intersection with slope face (from toe to crest)
+    var slopeInts = circleLineSegment(cx, cy, r,
+      0, 0, profile.L, profile.H);
+    for (i = 0; i < slopeInts.length; i++) {
+      intersections.push(slopeInts[i]);
+    }
+
+    // 3) Intersection with crest (y = H, x >= L)
+    var crestInts = circleLineHorizontal(cx, cy, r, profile.H);
+    for (i = 0; i < crestInts.length; i++) {
+      if (crestInts[i].x >= profile.L - 0.001) intersections.push(crestInts[i]);
+    }
+
+    // Slices use the lower semicircle. An upper-arc intersection cannot close it.
+    var eps = 1e-7 * Math.max(1, profile.H, r);
+    intersections = intersections.filter(function (p) {
+      var radicand = r * r - (p.x - cx) * (p.x - cx);
+      return radicand >= -eps &&
+        Math.abs(p.y - (cy - Math.sqrt(Math.max(0, radicand)))) <= eps;
+    });
+    if (intersections.length < 2) return null;
+
+    // Sort by x
+    intersections.sort(function (a, b) { return a.x - b.x; });
+    intersections = intersections.filter(function (p, index, all) {
+      return index === 0 || Math.abs(p.x - all[index - 1].x) > eps;
+    });
+    if (intersections.length < 2) return null;
+
+    // Entry = leftmost on the lower arc, Exit = rightmost
+    var entry = intersections[0];
+    var exit = intersections[intersections.length - 1];
+
+    // Validate: entry should be to the left of exit
+    if (exit.x - entry.x < 0.5) return null;
+
+    // Do not bridge separate soil regions or use an arc above the ground.
+    var checks = [entry.x, exit.x, 0, profile.L, cx];
+    for (var j = 1; j < 100; j++) checks.push(entry.x + (exit.x - entry.x) * j / 100);
+    for (var k = 0; k < checks.length; k++) {
+      var x = checks[k];
+      if (x < entry.x || x > exit.x) continue;
+      var arcY = cy - Math.sqrt(Math.max(0, r * r - (x - cx) * (x - cx)));
+      if (arcY > Geo.surfaceY(profile, x) + eps) return null;
+    }
+
+    return { entry: entry, exit: exit };
+  };
+
+  // Circle intersection with horizontal line y = yLine
+  function circleLineHorizontal(cx, cy, r, yLine) {
+    var dy = yLine - cy;
+    var disc = r * r - dy * dy;
+    if (disc < 0) return [];
+    var sq = Math.sqrt(disc);
+    var results = [];
+    results.push({ x: cx - sq, y: yLine });
+    if (sq > 0.01) results.push({ x: cx + sq, y: yLine });
+    return results;
+  }
+
+  // Circle intersection with line segment (x1,y1)→(x2,y2)
+  function circleLineSegment(cx, cy, r, x1, y1, x2, y2) {
+    var dx = x2 - x1;
+    var dy = y2 - y1;
+    var fx = x1 - cx;
+    var fy = y1 - cy;
+    var a = dx * dx + dy * dy;
+    var b = 2 * (fx * dx + fy * dy);
+    var c = fx * fx + fy * fy - r * r;
+    var disc = b * b - 4 * a * c;
+    if (disc < 0) return [];
+    var sq = Math.sqrt(disc);
+    var results = [];
+    var t1 = (-b - sq) / (2 * a);
+    var t2 = (-b + sq) / (2 * a);
+    if (t1 >= -0.001 && t1 <= 1.001) {
+      t1 = Math.max(0, Math.min(1, t1));
+      results.push({ x: x1 + t1 * dx, y: y1 + t1 * dy });
+    }
+    if (t2 >= -0.001 && t2 <= 1.001 && Math.abs(t2 - t1) > 0.001) {
+      t2 = Math.max(0, Math.min(1, t2));
+      results.push({ x: x1 + t2 * dx, y: y1 + t2 * dy });
+    }
+    return results;
+  }
+
+  // --- Tension Crack Depth ---
+  // Zc = 2c / (γ √Ka) where Ka = tan²(45° - φ/2)
+  Geo.tensionCrackDepth = function (c, phi, gamma) {
+    if (c <= 0 || gamma <= 0) return 0;
+    var phiRad = phi * DEG;
+    var Ka = Math.pow(Math.tan(Math.PI / 4 - phiRad / 2), 2);
+    if (Ka <= 0) return 0;
+    var Zc = (2 * c) / (gamma * Math.sqrt(Ka));
+    return Zc;
+  };
+
+  // --- Generate Slices ---
+  Geo.generateSlices = function (profile, cx, cy, r, numSlices, waterTableY, gamma, c, phi, options) {
+    options = options || {};
+    var ints = Geo.circleIntersections(profile, cx, cy, r);
+    if (!ints) return null;
+
+    var entryX = ints.entry.x;
+    var exitX = ints.exit.x;
+    var totalWidth = exitX - entryX;
+    var b = totalWidth / numSlices; // slice width
+    var ratios = options.sliceWidthRatios;
+    var ratioTotal = 0;
+    var ratioScale = 1;
+    if (ratios !== undefined) {
+      if (!Array.isArray(ratios) || ratios.length !== numSlices ||
+        !ratios.every(function (value) { return Number.isFinite(value) && value > 0; })) return null;
+      ratioScale = Math.max.apply(null, ratios);
+      ratioTotal = ratios.reduce(function (sum, value) { return sum + value / ratioScale; }, 0);
+    }
+
+    // Integral of the piecewise flat / inclined / flat ground surface.
+    function surfaceIntegral(x) {
+      if (x <= 0) return 0;
+      if (x < profile.L) return profile.H * x * x / (2 * profile.L);
+      return profile.H * (x - profile.L / 2);
+    }
+
+    // Integral of sqrt(r² - (x-cx)²) on the lower semicircle.
+    function circleIntegral(x) {
+      var z = Math.max(-r, Math.min(r, x - cx));
+      return (z * Math.sqrt(Math.max(0, r * r - z * z)) + r * r * Math.asin(z / r)) / 2;
+    }
+
+    // Tension crack
+    var Zc = options.tensionCrack === false ? 0 : Geo.tensionCrackDepth(c, phi, gamma);
+    var crackY = profile.H - Zc; // Y level below which crack exists
+
+    var slices = [];
+    var nextX = entryX;
+    for (var i = 0; i < numSlices; i++) {
+      var xLeft = ratios ? nextX : entryX + i * b;
+      if (ratios) b = totalWidth * (ratios[i] / ratioScale) / ratioTotal;
+      var xRight = ratios && i === numSlices - 1 ? exitX : xLeft + b;
+      if (ratios) b = xRight - xLeft;
+      nextX = xRight;
+      if (!Number.isFinite(b) || b <= 0) continue;
+      var xMid = xLeft + b / 2;
+
+      // Top of slice: slope surface
+      var yTop = Geo.surfaceY(profile, xMid);
+
+      // Bottom of slice: circle arc
+      var dx = xMid - cx;
+      var discr = r * r - dx * dx;
+      if (discr < 0) continue; // slice center outside circle
+      var yBottom = cy - Math.sqrt(discr);
+
+      // Skip slices with negligible height
+      var height = yTop - yBottom;
+      if (height < 0.01) continue;
+
+      // Tension crack: if base is in crack zone, skip this slice
+      if (Zc > 0 && yBottom > crackY && yBottom > yTop - 0.5) continue;
+
+      var yTopLeft = Geo.surfaceY(profile, xLeft);
+      var yTopRight = Geo.surfaceY(profile, xRight);
+      var dxL = xLeft - cx;
+      var dxR = xRight - cx;
+      var discrL = r * r - dxL * dxL;
+      var discrR = r * r - dxR * dxR;
+      var yBotLeft = discrL >= 0 ? cy - Math.sqrt(discrL) : yBottom;
+      var yBotRight = discrR >= 0 ? cy - Math.sqrt(discrR) : yBottom;
+
+      // Base angle α: sin(α) = (xMid - cx) / r
+      var sinAlpha = (xMid - cx) / r;
+      sinAlpha = Math.max(-1, Math.min(1, sinAlpha));
+      var alpha = Math.asin(sinAlpha);
+      var cosAlpha = Math.cos(alpha);
+
+      // Base length
+      var baseLength = b / cosAlpha;
+      if (!isFinite(baseLength) || baseLength <= 0) baseLength = b;
+      if (options.baseGeometry === 'chord') {
+        var baseRise = yBotRight - yBotLeft;
+        baseLength = Math.hypot(b, baseRise);
+        alpha = Math.atan2(baseRise, b);
+        sinAlpha = baseRise / baseLength;
+        cosAlpha = b / baseLength;
+      }
+
+      // Area (approximate as trapezoid)
+      var hLeft = Math.max(0, yTopLeft - yBotLeft);
+      var hRight = Math.max(0, yTopRight - yBotRight);
+      var area = (hLeft + hRight) / 2 * b;
+      if (options.areaIntegration === 'exact') {
+        area = surfaceIntegral(xRight) - surfaceIntegral(xLeft) - cy * b +
+          circleIntegral(xRight) - circleIntegral(xLeft);
+        if (!Number.isFinite(area) || area <= 0) continue;
+      }
+
+      // Weight
+      var weight = gamma * area;
+
+      // Pore pressure at base
+      var hw = 0;
+      if (options.dry !== true && waterTableY > yBottom) {
+        hw = waterTableY - yBottom;
+        // Check if water table exits through slope face
+        var slopeYatMid = Geo.surfaceY(profile, xMid);
+        if (waterTableY > slopeYatMid) {
+          // Water seeps out — use cos²(slopeAngle) correction
+          hw = slopeYatMid - yBottom;
+          if (hw < 0) hw = 0;
+        }
+      }
+      var porePressure = T.GAMMA_WATER * hw;
+
+      slices.push({
+        index: i,
+        xLeft: xLeft,
+        xRight: xRight,
+        xMid: xMid,
+        yTop: yTop,
+        yBottom: yBottom,
+        height: height,
+        width: b,
+        area: area,
+        weight: weight,
+        alpha: alpha / DEG, // degrees for display
+        alphaRad: alpha,
+        sinAlpha: sinAlpha,
+        cosAlpha: cosAlpha,
+        baseLength: baseLength,
+        hw: hw,
+        porePressure: porePressure,
+        // Will be filled by calculations
+        resistance: 0,
+        shearForce: 0,
+        mAlpha: 1,
+        mAlphaWarning: false,
+        contributionRatio: 1,
+        // Geometry for rendering
+        topLeft:  { x: xLeft,  y: yTopLeft },
+        topRight: { x: xRight, y: yTopRight },
+        botLeft:  { x: xLeft,  y: yBotLeft },
+        botRight: { x: xRight, y: yBotRight }
+      });
+    }
+
+    return slices.length > 0 ? slices : null;
+  };
+
+  // --- World Bounds for Canvas ---
+  Geo.worldBounds = function (profile, cx, cy, r) {
+    var pad = Math.max(profile.H * 0.3, 3);
+    var minX = Math.min(-profile.extLeft, cx - r) - pad;
+    var maxX = Math.max(profile.L + profile.extRight, cx + r) + pad;
+    var minY = Math.min(cy - r, -pad);
+    var maxY = Math.max(profile.H + pad, cy + r * 0.3);
+    return { minX: minX, maxX: maxX, minY: minY, maxY: maxY };
+  };
+
+})(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));
+
+</script>
+<script>
+/* =============================================
+   TALUDES — Fellenius, Bishop, Analytical
+   ============================================= */
+(function (global) {
+  'use strict';
+
+  var T = global.Taludes = global.Taludes || {};
+  var Calc = T.Calculations = {};
+
+  var DEG = Math.PI / 180;
+
+  // --- Fellenius (Ordinary Method of Slices) ---
+  // FS = Σ[c·l + (W·cosα - u·l)·tanφ] / Σ[W·sinα]
+  Calc.fellenius = function (slices, c, phiDeg) {
+    // No shear strength at all
+    if (c <= 0 && phiDeg <= 0) {
+      var noStrengthDriving = 0;
+      for (var k = 0; k < slices.length; k++) {
+        slices[k].resistance = 0;
+        slices[k].shearForce = slices[k].weight * slices[k].sinAlpha;
+        slices[k].contributionRatio = 0;
+        noStrengthDriving += slices[k].shearForce;
+      }
+      return { fs: 0, converged: true, iterations: 0, sumResisting: 0, sumDriving: noStrengthDriving, noStrength: true };
+    }
+    var tanPhi = Math.tan(phiDeg * DEG);
+    var sumResisting = 0;
+    var sumDriving = 0;
+
+    for (var i = 0; i < slices.length; i++) {
+      var s = slices[i];
+      var Ncl = s.weight * s.cosAlpha - s.porePressure * s.baseLength;
+      if (Ncl < 0) Ncl = 0; // no tension
+
+      var resistance = c * s.baseLength + Ncl * tanPhi;
+      var driving = s.weight * s.sinAlpha;
+
+      s.resistance = resistance;
+      s.shearForce = driving;
+
+      sumResisting += resistance;
+      sumDriving += driving;
+    }
+
+    if (sumDriving <= 0) return { fs: NaN, converged: false, iterations: 0 };
+
+    var fs = sumResisting / sumDriving;
+
+    // Compute contribution ratios
+    for (var j = 0; j < slices.length; j++) {
+      var sf = Math.abs(slices[j].shearForce);
+      slices[j].contributionRatio = sf > 0.001 ? slices[j].resistance / sf : 2.0;
+    }
+
+    return {
+      fs: Math.max(0, fs),
+      converged: true,
+      iterations: 0,
+      sumResisting: sumResisting,
+      sumDriving: sumDriving
+    };
+  };
+
+  // --- Bishop Simplified ---
+  // FS = Σ[(c·b + (W - u·b)·tanφ) / mα] / Σ[W·sinα]
+  // mα = cosα + sinα·tanφ/FS
+  // Iterative
+  Calc.bishop = function (slices, c, phiDeg) {
+    // No shear strength at all
+    if (c <= 0 && phiDeg <= 0) {
+      return Calc.fellenius(slices, c, phiDeg);
+    }
+    var tanPhi = Math.tan(phiDeg * DEG);
+    var maxIter = T.BISHOP_MAX_ITER;
+    var tol = T.BISHOP_TOLERANCE;
+    var relax = T.BISHOP_RELAXATION;
+    var mAlphaMin = T.MALPHA_MIN;
+
+    // Sum of W·sinα (constant)
+    var sumDriving = 0;
+    for (var i = 0; i < slices.length; i++) {
+      sumDriving += slices[i].weight * slices[i].sinAlpha;
+    }
+    if (sumDriving <= 0) return { fs: NaN, converged: false, iterations: 0 };
+
+    // Initial guess from Fellenius
+    var fellResult = Calc.fellenius(slices, c, phiDeg);
+    var currentFS = Math.max(0.5, fellResult.fs);
+    var converged = false;
+    var iter;
+
+    for (iter = 0; iter < maxIter; iter++) {
+      var sumNumerator = 0;
+      var anyWarning = false;
+
+      for (i = 0; i < slices.length; i++) {
+        var s = slices[i];
+        var mAlpha = s.cosAlpha + (s.sinAlpha * tanPhi) / Math.max(Number.EPSILON, currentFS);
+
+        s.mAlphaWarning = false;
+        if (mAlpha < mAlphaMin) {
+          mAlpha = mAlphaMin;
+          s.mAlphaWarning = true;
+          anyWarning = true;
+        }
+        s.mAlpha = mAlpha;
+
+        var term = (c * s.width + (s.weight - s.porePressure * s.width) * tanPhi) / mAlpha;
+        sumNumerator += term;
+      }
+
+      var newFS = sumNumerator / sumDriving;
+      newFS = Math.max(0, newFS);
+
+      // Check convergence
+      if (Math.abs(newFS - currentFS) < tol) {
+        currentFS = newFS;
+        converged = true;
+        iter++;
+        break;
+      }
+
+      // Sub-relaxation to prevent oscillation
+      if (iter > 20) {
+        currentFS = relax * currentFS + (1 - relax) * newFS;
+      } else {
+        currentFS = newFS;
+      }
+    }
+
+    // Final pass to compute per-slice resistance and contribution
+    for (i = 0; i < slices.length; i++) {
+      var sl = slices[i];
+      var mA = sl.cosAlpha + (sl.sinAlpha * tanPhi) / Math.max(Number.EPSILON, currentFS);
+      sl.mAlphaWarning = mA < mAlphaMin;
+      if (sl.mAlphaWarning) mA = mAlphaMin;
+      sl.mAlpha = mA;
+      sl.resistance = (c * sl.width + (sl.weight - sl.porePressure * sl.width) * tanPhi) / mA;
+      sl.shearForce = sl.weight * sl.sinAlpha;
+      var sf = Math.abs(sl.shearForce);
+      sl.contributionRatio = sf > 0.001 ? sl.resistance / sf : 2.0;
+    }
+
+    return {
+      fs: Math.max(0, currentFS),
+      converged: converged,
+      iterations: iter,
+      sumDriving: sumDriving,
+      mAlphaWarning: slices.some(function(s) { return s.mAlphaWarning; })
+    };
+  };
+
+  // --- Analytical FS for c=0 (infinite slope) ---
+  // FS = tan(φ) / tan(β)
+  Calc.analyticalGranular = function (phiDeg, betaDeg) {
+    var tanPhi = Math.tan(phiDeg * DEG);
+    var tanBeta = Math.tan(betaDeg * DEG);
+    if (tanBeta < 0.001) return 99.99;
+    return tanPhi / tanBeta;
+  };
+
+  // --- Full Analysis ---
+  // Runs geometry + chosen method, returns complete results
+  Calc.analyze = function (params) {
+    function invalid(message, profile, circle) {
+      return { valid: false, error: message, fs: null, slices: null,
+        profile: profile || null, circle: circle || null, converged: false };
+    }
+    if (!params || !['height', 'slopeAngle', 'gamma', 'cohesion', 'friction', 'waterTable', 'numSlices'].every(function (key) {
+      return Number.isFinite(params[key]);
+    }) || params.height <= 0 || params.gamma <= 0 || params.slopeAngle <= 0 ||
+      params.slopeAngle >= 90 || params.cohesion < 0 || params.friction < 0 ||
+      params.friction >= 90 || !Number.isInteger(params.numSlices) ||
+      params.numSlices < 1 || params.numSlices > 1000 ||
+      (params.method != null && params.method !== 'bishop' && params.method !== 'fellenius')) {
+      return invalid('Parámetros no válidos. Revisar valores, unidades y número de dovelas.');
+    }
+    if (!['dry', 'tensionCrack', 'requireAllSlices'].every(function (key) {
+      return params[key] === undefined || typeof params[key] === 'boolean';
+    }) || (params.areaIntegration !== undefined && params.areaIntegration !== 'exact' &&
+      params.areaIntegration !== 'trapezoid') ||
+      (params.baseGeometry !== undefined && params.baseGeometry !== 'chord' && params.baseGeometry !== 'tangent') ||
+      (params.sliceWidthRatios !== undefined && (!Array.isArray(params.sliceWidthRatios) ||
+        params.sliceWidthRatios.length !== params.numSlices ||
+        !params.sliceWidthRatios.every(function (value) { return Number.isFinite(value) && value > 0; })))) {
+      return invalid('Opciones de dovelas no válidas. Revisar anchos, integración y opciones booleanas.');
+    }
+    var profile = T.Geometry.slopeProfile(params.height, params.slopeAngle);
+
+    // Circle position
+    var cx = params.circleX;
+    var cy = params.circleY;
+    var r  = params.circleR;
+    if (cx == null || cy == null || r == null) {
+      var def = T.Geometry.defaultCircle(params.height, params.slopeAngle);
+      cx = cx != null ? cx : def.cx;
+      cy = cy != null ? cy : def.cy;
+      r  = r  != null ? r  : def.r;
+    }
+
+    if (![cx, cy, r].every(Number.isFinite) || r <= 0) {
+      return invalid('Centro o radio del círculo no válido.', profile);
+    }
+
+    // Effective parameters (undrained mode: φ=0, ignore water)
+    var cohesion = params.cohesion;
+    var friction = params.drainedMode === false ? 0 : params.friction;
+    var waterTable = params.drainedMode === false ? 0 : params.waterTable;
+
+    // Generate slices
+    var slices = T.Geometry.generateSlices(
+      profile, cx, cy, r, params.numSlices,
+      waterTable, params.gamma, cohesion, friction, {
+        dry: params.dry,
+        sliceWidthRatios: params.sliceWidthRatios,
+        areaIntegration: params.areaIntegration,
+        baseGeometry: params.baseGeometry,
+        tensionCrack: params.tensionCrack
+      }
+    );
+
+    if (!slices || slices.length === 0) {
+      return {
+        valid: false,
+        error: 'Círculo sin intersección válida. Ajustar centro o radio.',
+        profile: profile,
+        circle: { cx: cx, cy: cy, r: r },
+        fs: null,
+        slices: null
+      };
+    }
+
+    if (params.requireAllSlices === true && slices.length !== params.numSlices) {
+      return invalid('La superficie no conserva todas las dovelas solicitadas.', profile, { cx: cx, cy: cy, r: r });
+    }
+
+    var driving = slices.reduce(function (sum, s) { return sum + s.weight * s.sinAlpha; }, 0);
+    var totalWeight = slices.reduce(function (sum, s) { return sum + s.weight; }, 0);
+    if (driving <= 1e-12 * Math.max(1, totalWeight)) {
+      return invalid('Superficie sin momento deslizante en la dirección analizada.', profile, { cx: cx, cy: cy, r: r });
+    }
+
+    // Calculate FS
+    var result;
+    if (params.method === 'fellenius') {
+      result = Calc.fellenius(slices, cohesion, friction);
+    } else {
+      result = Calc.bishop(slices, cohesion, friction);
+    }
+
+    if (!Number.isFinite(result.fs)) {
+      return invalid('El cálculo no produjo un factor de seguridad finito.', profile, { cx: cx, cy: cy, r: r });
+    }
+
+    // Analytical FS for c≈0
+    var analyticalFS = null;
+    if (cohesion < 0.5) {
+      analyticalFS = Calc.analyticalGranular(friction, params.slopeAngle);
+    }
+
+    // Tension crack info
+    var tensionCrack = params.tensionCrack === false ? 0 : T.Geometry.tensionCrackDepth(cohesion, friction, params.gamma);
+
+    var analysisParams = {
+      height: params.height,
+      slopeAngle: params.slopeAngle,
+      gamma: params.gamma,
+      cohesion: cohesion,
+      friction: friction,
+      waterTable: waterTable,
+      numSlices: params.numSlices
+    };
+    ['dry', 'tensionCrack', 'requireAllSlices', 'areaIntegration', 'baseGeometry', 'sliceWidthRatios'].forEach(function (key) {
+      if (Object.prototype.hasOwnProperty.call(params, key)) {
+        analysisParams[key] = Array.isArray(params[key]) ? params[key].slice() : params[key];
+      }
+    });
+
+    return {
+      valid: true,
+      profile: profile,
+      circle: { cx: cx, cy: cy, r: r },
+      slices: slices,
+      fs: result.fs,
+      method: params.method,
+      converged: result.converged,
+      iterations: result.iterations || 0,
+      mAlphaWarning: result.mAlphaWarning || false,
+      sumResisting: result.sumResisting,
+      sumDriving: result.sumDriving,
+      analyticalFS: analyticalFS,
+      tensionCrackDepth: tensionCrack,
+      waterTable: waterTable,
+      numSlicesValid: slices.length,
+      params: analysisParams
+    };
+  };
+
+  // --- Dual Analysis (for comparison mode) ---
+  Calc.analyzeBoth = function (params) {
+    var p1 = Object.assign({}, params, { method: 'fellenius' });
+    var p2 = Object.assign({}, params, { method: 'bishop' });
+    return {
+      fellenius: Calc.analyze(p1),
+      bishop: Calc.analyze(p2)
+    };
+  };
+
+  // --- Critical Circle Search ---
+  // Grid search for minimum FS
+  Calc.findCriticalCircle = function (params, onProgress, evaluator) {
+    var evaluate = typeof evaluator === 'function' ? evaluator : Calc.analyze;
+    var H = params.height;
+    var beta = params.slopeAngle * DEG;
+    var L = H / Math.tan(beta);
+    var grid = T.SEARCH_GRID;
+
+    // Search ranges
+    var xMin = -H * grid.xPadding;
+    var xMax = L + H * grid.xPadding;
+    var yMin = H * grid.yMin;
+    var yMax = H * grid.yMax;
+    var rMin = H * grid.rMin;
+    var rMax = H * grid.rMax;
+
+    var xStep = (xMax - xMin) / grid.xSteps;
+    var yStep = (yMax - yMin) / grid.ySteps;
+    var rStep = (rMax - rMin) / grid.rSteps;
+
+    var bestFS = Infinity;
+    var bestConfig = null;
+    var tried = 0;
+    var total = (grid.xSteps + 1) * (grid.ySteps + 1) * (grid.rSteps + 1);
+    var candidates = [];
+
+    for (var xi = 0; xi <= grid.xSteps; xi++) {
+      for (var yi = 0; yi <= grid.ySteps; yi++) {
+        for (var ri = 0; ri <= grid.rSteps; ri++) {
+          var cx = xMin + xi * xStep;
+          var cy = yMin + yi * yStep;
+          var r  = rMin + ri * rStep;
+
+          tried++;
+
+          var testParams = Object.assign({}, params, {
+            circleX: cx, circleY: cy, circleR: r
+          });
+          var result = evaluate(testParams);
+
+          if (result.valid && result.converged && !result.mAlphaWarning && Number.isFinite(result.fs) && result.fs >= 0) {
+            candidates.push({ cx: cx, cy: cy, r: r, fs: result.fs });
+            if (result.fs < bestFS) {
+              bestFS = result.fs;
+              bestConfig = { cx: cx, cy: cy, r: r };
+            }
+          }
+
+          if (onProgress && tried % 100 === 0) {
+            onProgress({ tried: tried, total: total, bestFS: bestFS });
+          }
+        }
+      }
+    }
+
+    // Refine: grid search around best result
+    if (bestConfig) {
+      var refineRange = Math.max(xStep, yStep, rStep) * 1.5;
+      var refineCenter = Object.assign({}, bestConfig);
+      var refineSteps = 5;
+      var rfs = refineRange / refineSteps;
+
+      for (xi = -refineSteps; xi <= refineSteps; xi++) {
+        for (yi = -refineSteps; yi <= refineSteps; yi++) {
+          for (ri = -refineSteps; ri <= refineSteps; ri++) {
+            cx = refineCenter.cx + xi * rfs;
+            cy = refineCenter.cy + yi * rfs;
+            r  = refineCenter.r  + ri * rfs;
+            if (r < 1) continue;
+
+            var tp = Object.assign({}, params, {
+              circleX: cx, circleY: cy, circleR: r
+            });
+            var res = evaluate(tp);
+            tried++;
+
+            if (res.valid && res.converged && !res.mAlphaWarning && Number.isFinite(res.fs) && res.fs >= 0 && res.fs < bestFS) {
+              bestFS = res.fs;
+              bestConfig = { cx: cx, cy: cy, r: r };
+            }
+          }
+        }
+      }
+    }
+
+    // Sort candidates for animation
+    candidates.sort(function (a, b) { return a.fs - b.fs; });
+    var topCandidates = candidates.slice(0, 20);
+
+    return {
+      bestConfig: bestConfig,
+      bestFS: bestFS,
+      tried: tried,
+      candidates: topCandidates
+    };
+  };
+
+  // --- Sensitivity Analysis ---
+  Calc.sensitivitySweep = function (params, paramName, steps) {
+    steps = steps || 20;
+    var range = T.RANGES[paramName];
+    if (!range) return [];
+
+    var stepSize = (range.max - range.min) / steps;
+    var results = [];
+
+    for (var i = 0; i <= steps; i++) {
+      var val = range.min + i * stepSize;
+      var testParams = Object.assign({}, params);
+      testParams[paramName] = val;
+
+      // Recalculate circle for geometry changes
+      if (paramName === 'height' || paramName === 'slopeAngle') {
+        var def = T.Geometry.defaultCircle(testParams.height, testParams.slopeAngle);
+        testParams.circleX = def.cx;
+        testParams.circleY = def.cy;
+        testParams.circleR = def.r;
+      }
+
+      var result = Calc.analyze(testParams);
+      results.push({
+        value: val,
+        fs: result.valid ? result.fs : null,
+        valid: result.valid
+      });
+    }
+
+    return results;
+  };
+
+})(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));
+
+</script>
+<script>
+/* =============================================
+   TALUDES — Canvas Renderer
+   ============================================= */
+(function (global) {
+  'use strict';
+
+  var T = global.Taludes = global.Taludes || {};
+  var Renderer = T.Renderer = {};
+  var COLORS = T.COLORS;
+
+  var _canvas, _ctx, _container;
+  var _transform = null;
+  var _needsRender = true;
+  var _lastResult = null;
+  var _hoveredSlice = -1;
+  var _ghostCircles = [];
+  var _animating = false;
+  var _isDark = false;
+
+  Renderer.init = function (canvasEl, containerEl) {
+    _canvas = canvasEl;
+    _ctx = canvasEl.getContext('2d');
+    _container = containerEl;
+
+    Renderer.resize();
+    var ro = new ResizeObserver(function () { Renderer.resize(); });
+    ro.observe(_container);
+
+    requestAnimationFrame(renderLoop);
+  };
+
+  Renderer.resize = function () {
+    var rect = _container.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    _canvas.width = rect.width * dpr;
+    _canvas.height = rect.height * dpr;
+    _canvas.style.width = rect.width + 'px';
+    _canvas.style.height = rect.height + 'px';
+    _ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    _transform = null;
+    _needsRender = true;
+  };
+
+  Renderer.setDark = function (dark) {
+    _isDark = dark;
+    _needsRender = true;
+  };
+
+  Renderer.setResult = function (result) {
+    _lastResult = result;
+    _needsRender = true;
+  };
+
+  Renderer.setHoveredSlice = function (idx) {
+    if (_hoveredSlice !== idx) {
+      _hoveredSlice = idx;
+      _needsRender = true;
+    }
+  };
+
+  Renderer.setGhostCircles = function (circles) {
+    _ghostCircles = circles || [];
+    _needsRender = true;
+  };
+
+  Renderer.requestRender = function () {
+    _needsRender = true;
+  };
+
+  // --- Coordinate Transform ---
+  function computeTransform(bounds) {
+    var cw = _canvas.width / (window.devicePixelRatio || 1);
+    var ch = _canvas.height / (window.devicePixelRatio || 1);
+
+    var pad = 20;
+    var ww = bounds.maxX - bounds.minX;
+    var wh = bounds.maxY - bounds.minY;
+    var scaleX = (cw - pad * 2) / ww;
+    var scaleY = (ch - pad * 2) / wh;
+    var scale = Math.min(scaleX, scaleY);
+    var ox = pad + ((cw - pad * 2) - ww * scale) / 2;
+    var oy = pad + ((ch - pad * 2) - wh * scale) / 2;
+    return {
+      scale: scale,
+      ox: ox, oy: oy,
+      minX: bounds.minX, maxY: bounds.maxY,
+      cw: cw, ch: ch
+    };
+  }
+
+  function w2c(tx, wx, wy) {
+    return {
+      x: tx.ox + (wx - tx.minX) * tx.scale,
+      y: tx.oy + (tx.maxY - wy) * tx.scale
+    };
+  }
+
+  function c2w(tx, cx, cy) {
+    return {
+      x: tx.minX + (cx - tx.ox) / tx.scale,
+      y: tx.maxY - (cy - tx.oy) / tx.scale
+    };
+  }
+
+  Renderer.canvasToWorld = function (px, py) {
+    if (!_transform) return { x: 0, y: 0 };
+    return c2w(_transform, px, py);
+  };
+
+  Renderer.worldToCanvas = function (wx, wy) {
+    if (!_transform) return { x: 0, y: 0 };
+    return w2c(_transform, wx, wy);
+  };
+
+  Renderer.getTransform = function () { return _transform; };
+
+  // --- Render Loop ---
+  function renderLoop() {
+    if (_needsRender) {
+      render();
+      _needsRender = false;
+    }
+    requestAnimationFrame(renderLoop);
+  }
+
+  function render() {
+    if (!_lastResult) return;
+    var res = _lastResult;
+    var cw = _canvas.width / (window.devicePixelRatio || 1);
+    var ch = _canvas.height / (window.devicePixelRatio || 1);
+
+    if (!res.profile || !res.circle || ![res.circle.cx, res.circle.cy, res.circle.r].every(Number.isFinite)) {
+      _ctx.clearRect(0, 0, cw, ch);
+      _transform = null;
+      return;
+    }
+
+    // Compute bounds & transform
+    var bounds = T.Geometry.worldBounds(res.profile, res.circle.cx, res.circle.cy, res.circle.r);
+    _transform = computeTransform(bounds);
+    var tx = _transform;
+
+    // Clear
+    _ctx.clearRect(0, 0, cw, ch);
+
+    // Sky gradient
+    var skyGrad = _ctx.createLinearGradient(0, 0, 0, ch);
+    skyGrad.addColorStop(0, _isDark ? COLORS.skyDarkTop : COLORS.skyTop);
+    skyGrad.addColorStop(1, _isDark ? COLORS.skyDarkBottom : COLORS.skyBottom);
+    _ctx.fillStyle = skyGrad;
+    _ctx.fillRect(0, 0, cw, ch);
+
+    // Grid dots
+    drawGrid(tx, cw, ch);
+
+    // Water table (behind soil)
+    if (res.waterTable > 0) drawWater(tx, res);
+
+    // Soil mass
+    drawSoil(tx, res);
+
+    // Failure circle
+    drawFailureCircle(tx, res);
+
+    // Ghost circles (search animation)
+    if (_ghostCircles.length > 0) drawGhostCircles(tx, res);
+
+    // Slices
+    if (res.slices) drawSlices(tx, res);
+
+    // Circle center mark
+    drawCenter(tx, res.circle.cx, res.circle.cy);
+
+    // Scale bar
+    drawScaleBar(tx, cw, ch);
+
+    // Mouse coordinates (drawn by interaction handler)
+  }
+
+  // --- Drawing Functions ---
+
+  function drawGrid(tx, cw, ch) {
+    var gridColor = _isDark ? COLORS.gridDark : COLORS.grid;
+    _ctx.fillStyle = gridColor;
+    // Determine grid spacing (1m, 2m, 5m depending on zoom)
+    var pixPerMeter = tx.scale;
+    var spacing = 1;
+    if (pixPerMeter < 8) spacing = 5;
+    else if (pixPerMeter < 20) spacing = 2;
+
+    var startX = Math.floor(tx.minX / spacing) * spacing;
+    var endX = tx.minX + cw / tx.scale;
+    var startY = Math.floor((tx.maxY - ch / tx.scale) / spacing) * spacing;
+    var endY = tx.maxY;
+
+    for (var x = startX; x <= endX; x += spacing) {
+      for (var y = startY; y <= endY; y += spacing) {
+        var p = w2c(tx, x, y);
+        _ctx.beginPath();
+        _ctx.arc(p.x, p.y, 1, 0, Math.PI * 2);
+        _ctx.fill();
+      }
+    }
+  }
+
+  function drawSoil(tx, res) {
+    var profile = res.profile;
+    var pts = profile.points;
+    _ctx.beginPath();
+    // Soil polygon: profile top, then drop down, go left, go up
+    var first = w2c(tx, pts[0].x, pts[0].y);
+    _ctx.moveTo(first.x, first.y);
+    for (var i = 1; i < pts.length; i++) {
+      var p = w2c(tx, pts[i].x, pts[i].y);
+      _ctx.lineTo(p.x, p.y);
+    }
+    // Close downward (deep underground)
+    var deepY = w2c(tx, 0, res.circle.cy - res.circle.r - 5).y;
+    var lastPt = w2c(tx, pts[pts.length - 1].x, pts[pts.length - 1].y);
+    _ctx.lineTo(lastPt.x, deepY);
+    _ctx.lineTo(first.x, deepY);
+    _ctx.closePath();
+    _ctx.fillStyle = _isDark ? COLORS.soilDark : COLORS.soil;
+    _ctx.fill();
+    _ctx.strokeStyle = _isDark ? COLORS.soilDarkBorder : COLORS.soilBorder;
+    _ctx.lineWidth = 2;
+    _ctx.stroke();
+  }
+
+  function drawWater(tx, res) {
+    var wt = res.waterTable;
+    if (wt <= 0) return;
+    var profile = res.profile;
+    var H = profile.H;
+    var L = profile.L;
+
+    // Water level line
+    _ctx.save();
+    _ctx.setLineDash([6, 4]);
+    _ctx.strokeStyle = COLORS.waterLine;
+    _ctx.lineWidth = 1.5;
+
+    // Water intersects slope face at some point
+    var waterSlopeX = (wt / H) * L;
+    if (wt > H) waterSlopeX = L;
+
+    var leftX = Math.min(-profile.extLeft, waterSlopeX - 2);
+    var rightX = wt >= H ? L + profile.extRight : waterSlopeX;
+
+    var pL = w2c(tx, leftX, wt);
+    var pR = w2c(tx, rightX, wt);
+    _ctx.beginPath();
+    _ctx.moveTo(pL.x, pL.y);
+    _ctx.lineTo(pR.x, pR.y);
+
+    // If water intersects slope face, draw down the face
+    if (wt < H && wt > 0) {
+      // Water surface meets slope face
+    }
+
+    _ctx.stroke();
+    _ctx.setLineDash([]);
+
+    // Water fill (semi-transparent area below water line inside soil)
+    _ctx.fillStyle = COLORS.waterFill;
+    _ctx.beginPath();
+
+    // Left edge at water level
+    _ctx.moveTo(pL.x, pL.y);
+    _ctx.lineTo(pR.x, pR.y);
+
+    // Down along slope face or vertical
+    if (wt < H) {
+      var pSlope = w2c(tx, waterSlopeX, wt);
+      _ctx.lineTo(pSlope.x, pSlope.y);
+    }
+
+    // Down to ground level
+    var pToe = w2c(tx, 0, 0);
+    _ctx.lineTo(pToe.x, pToe.y);
+    var pLeft = w2c(tx, leftX, 0);
+    _ctx.lineTo(pLeft.x, pLeft.y);
+    _ctx.lineTo(pL.x, pL.y);
+    _ctx.closePath();
+    _ctx.fill();
+
+    _ctx.restore();
+  }
+
+  function drawFailureCircle(tx, res) {
+    var fs = res.fs;
+    var cx = res.circle.cx;
+    var cy = res.circle.cy;
+    var r = res.circle.r;
+
+    var centerCanvas = w2c(tx, cx, cy);
+    var rCanvas = r * tx.scale;
+
+    _ctx.save();
+    if (fs === null || fs === undefined) {
+      _ctx.strokeStyle = '#999';
+      _ctx.setLineDash([5, 5]);
+      _ctx.lineWidth = 1;
+    } else if (fs >= T.FS_STABLE) {
+      _ctx.strokeStyle = COLORS.circleSafe;
+      _ctx.setLineDash([8, 6]);
+      _ctx.lineWidth = 1.5;
+    } else if (fs >= T.FS_CAUTION) {
+      _ctx.strokeStyle = COLORS.circleCaution;
+      _ctx.setLineDash([6, 4]);
+      _ctx.lineWidth = 2;
+    } else {
+      _ctx.strokeStyle = COLORS.circleDanger;
+      _ctx.setLineDash([]);
+      _ctx.lineWidth = 3;
+    }
+
+    _ctx.beginPath();
+    _ctx.arc(centerCanvas.x, centerCanvas.y, rCanvas, 0, Math.PI * 2);
+    _ctx.stroke();
+
+    // Fracture lines for FS < 1
+    if (fs !== null && fs < T.FS_CAUTION) {
+      drawFractureLines(tx, res);
+    }
+
+    _ctx.restore();
+  }
+
+  function drawFractureLines(tx, res) {
+    var ints = T.Geometry.circleIntersections(res.profile, res.circle.cx, res.circle.cy, res.circle.r);
+    if (!ints) return;
+    _ctx.strokeStyle = 'rgba(220,53,69,0.4)';
+    _ctx.lineWidth = 1;
+    _ctx.setLineDash([]);
+    var cx = res.circle.cx;
+    var cy = res.circle.cy;
+    var r = res.circle.r;
+    var numLines = 8;
+    var entryAngle = Math.atan2(cy - ints.entry.y, ints.entry.x - cx);
+    var exitAngle = Math.atan2(cy - ints.exit.y, ints.exit.x - cx);
+
+    for (var i = 0; i < numLines; i++) {
+      var t = (i + 0.5) / numLines;
+      var angle = entryAngle + t * (exitAngle - entryAngle);
+      var px = cx + r * Math.cos(angle);
+      var py = cy - r * Math.sin(angle);
+      var p = w2c(tx, px, py);
+      var len = 4 + Math.random() * 6;
+      var dir = angle + (Math.random() - 0.5) * 0.5;
+      _ctx.beginPath();
+      _ctx.moveTo(p.x, p.y);
+      _ctx.lineTo(p.x + Math.cos(dir) * len, p.y - Math.sin(dir) * len);
+      _ctx.stroke();
+    }
+  }
+
+  function drawGhostCircles(tx) {
+    _ctx.save();
+    for (var i = 0; i < _ghostCircles.length; i++) {
+      var gc = _ghostCircles[i];
+      var p = w2c(tx, gc.cx, gc.cy);
+      var rr = gc.r * tx.scale;
+      var alpha = gc.opacity || 0.15;
+      var color = gc.fs < 1.0 ? '220,53,69' : (gc.fs < 1.5 ? '230,126,34' : '100,100,100');
+      _ctx.strokeStyle = 'rgba(' + color + ',' + alpha + ')';
+      _ctx.lineWidth = 1;
+      _ctx.setLineDash([4, 4]);
+      _ctx.beginPath();
+      _ctx.arc(p.x, p.y, rr, 0, Math.PI * 2);
+      _ctx.stroke();
+
+      // FS label
+      if (gc.showFS) {
+        _ctx.fillStyle = 'rgba(' + color + ',' + (alpha + 0.2) + ')';
+        _ctx.font = '10px monospace';
+        _ctx.fillText(gc.fs.toFixed(2), p.x - 12, p.y - rr - 4);
+      }
+    }
+    _ctx.setLineDash([]);
+    _ctx.restore();
+  }
+
+  function drawSlices(tx, res) {
+    var slices = res.slices;
+    if (!slices) return;
+
+    for (var i = 0; i < slices.length; i++) {
+      var s = slices[i];
+      var isHovered = (i === _hoveredSlice);
+
+      // Color based on contribution ratio
+      var ratio = s.contributionRatio;
+      var color;
+      if (ratio > 1.2) {
+        // Good (blue) - interpolate intensity
+        var t = Math.min((ratio - 1.2) / 1.0, 1);
+        color = lerpColor(COLORS.sliceNeutral, COLORS.sliceGood, t);
+      } else if (ratio < 0.8) {
+        var t2 = Math.min((0.8 - ratio) / 0.6, 1);
+        color = lerpColor(COLORS.sliceNeutral, COLORS.sliceBad, t2);
+      } else {
+        color = COLORS.sliceNeutral;
+      }
+
+      // Draw slice polygon
+      var tl = w2c(tx, s.topLeft.x, s.topLeft.y);
+      var tr = w2c(tx, s.topRight.x, s.topRight.y);
+      var br = w2c(tx, s.botRight.x, s.botRight.y);
+      var bl = w2c(tx, s.botLeft.x, s.botLeft.y);
+
+      _ctx.beginPath();
+      _ctx.moveTo(tl.x, tl.y);
+      _ctx.lineTo(tr.x, tr.y);
+      _ctx.lineTo(br.x, br.y);
+      _ctx.lineTo(bl.x, bl.y);
+      _ctx.closePath();
+
+      var alpha = isHovered ? 0.85 : 0.6;
+      _ctx.fillStyle = hexToRgba(color, alpha);
+      _ctx.fill();
+
+      // Border
+      _ctx.strokeStyle = isHovered ? '#333' : 'rgba(0,0,0,0.3)';
+      _ctx.lineWidth = isHovered ? 2 : 0.5;
+      _ctx.stroke();
+
+      // Water pattern for submerged slices
+      if (s.hw > 0 && s.hw > s.height * 0.1) {
+        drawWaterPattern(tx, s, tl, tr, br, bl);
+      }
+
+      // Critical slice (worst ratio) — pulsing border
+      if (res.slices.length > 1) {
+        var worst = res.slices.reduce(function (a, b) {
+          return a.contributionRatio < b.contributionRatio ? a : b;
+        });
+        if (s === worst && !isHovered) {
+          _ctx.strokeStyle = COLORS.circleDanger;
+          _ctx.lineWidth = 2;
+          _ctx.setLineDash([3, 3]);
+          _ctx.stroke();
+          _ctx.setLineDash([]);
+        }
+      }
+    }
+  }
+
+  function drawWaterPattern(tx, s, tl, tr, br, bl) {
+    _ctx.save();
+    _ctx.strokeStyle = 'rgba(91,155,213,0.3)';
+    _ctx.lineWidth = 0.5;
+    // Horizontal lines inside the slice (water zone)
+    var waterTopY = Math.max(tl.y, tr.y); // canvas Y of top of water in slice
+    var steps = 3;
+    for (var j = 1; j <= steps; j++) {
+      var frac = j / (steps + 1);
+      var y = waterTopY + (Math.max(bl.y, br.y) - waterTopY) * frac;
+      _ctx.beginPath();
+      // Lerp x positions
+      var xL = bl.x + (tl.x - bl.x) * (1 - frac);
+      var xR = br.x + (tr.x - br.x) * (1 - frac);
+      _ctx.moveTo(xL, y);
+      _ctx.lineTo(xR, y);
+      _ctx.stroke();
+    }
+    _ctx.restore();
+  }
+
+  function drawCenter(tx, cx, cy) {
+    var p = w2c(tx, cx, cy);
+    var size = 8;
+    _ctx.save();
+    _ctx.strokeStyle = _isDark ? '#ccc' : COLORS.center;
+    _ctx.lineWidth = 1.5;
+    // Crosshair
+    _ctx.beginPath();
+    _ctx.moveTo(p.x - size, p.y);
+    _ctx.lineTo(p.x + size, p.y);
+    _ctx.moveTo(p.x, p.y - size);
+    _ctx.lineTo(p.x, p.y + size);
+    _ctx.stroke();
+    // Small circle
+    _ctx.beginPath();
+    _ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+    _ctx.stroke();
+    _ctx.restore();
+  }
+
+  function drawScaleBar(tx, cw, ch) {
+    // Determine a nice scale length
+    var pixPerMeter = tx.scale;
+    var targetPx = 80;
+    var meters = targetPx / pixPerMeter;
+    // Round to nice number
+    var nice = [1, 2, 5, 10, 20, 50];
+    var best = nice[0];
+    for (var i = 0; i < nice.length; i++) {
+      if (Math.abs(nice[i] - meters) < Math.abs(best - meters)) best = nice[i];
+    }
+    var barPx = best * pixPerMeter;
+
+    var x = 15;
+    var y = ch - 15;
+    _ctx.save();
+    _ctx.strokeStyle = _isDark ? '#aaa' : '#555';
+    _ctx.fillStyle = _isDark ? '#aaa' : '#555';
+    _ctx.lineWidth = 2;
+    _ctx.beginPath();
+    _ctx.moveTo(x, y);
+    _ctx.lineTo(x + barPx, y);
+    // End ticks
+    _ctx.moveTo(x, y - 4);
+    _ctx.lineTo(x, y + 4);
+    _ctx.moveTo(x + barPx, y - 4);
+    _ctx.lineTo(x + barPx, y + 4);
+    _ctx.stroke();
+    _ctx.font = '11px system-ui, sans-serif';
+    _ctx.textAlign = 'center';
+    _ctx.fillText(best + ' m', x + barPx / 2, y - 8);
+    _ctx.restore();
+  }
+
+  // Draw mouse coordinates on canvas
+  Renderer.drawMouseCoords = function (wx, wy) {
+    if (!_transform) return;
+    var cw = _transform.cw;
+    var ch = _transform.ch;
+    _ctx.save();
+    _ctx.fillStyle = _isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)';
+    _ctx.fillRect(cw - 135, ch - 30, 130, 25);
+    _ctx.fillStyle = _isDark ? '#ccc' : '#444';
+    _ctx.font = '11px monospace';
+    _ctx.textAlign = 'right';
+    _ctx.fillText('X: ' + wx.toFixed(1) + 'm  Y: ' + wy.toFixed(1) + 'm', cw - 10, ch - 13);
+    _ctx.restore();
+  };
+
+  // --- Hit Testing ---
+  Renderer.hitTestSlice = function (wx, wy) {
+    if (!_lastResult || !_lastResult.slices) return -1;
+    var slices = _lastResult.slices;
+    for (var i = 0; i < slices.length; i++) {
+      var s = slices[i];
+      if (wx >= s.xLeft && wx <= s.xRight) {
+        var yTop = T.Geometry.surfaceY(_lastResult.profile, wx);
+        var dx = wx - _lastResult.circle.cx;
+        var disc = _lastResult.circle.r * _lastResult.circle.r - dx * dx;
+        var yBot = disc >= 0 ? _lastResult.circle.cy - Math.sqrt(disc) : -999;
+        if (wy >= yBot && wy <= yTop) return i;
+      }
+    }
+    return -1;
+  };
+
+  // --- Utility ---
+  function hexToRgba(hex, a) {
+    var r = parseInt(hex.slice(1, 3), 16);
+    var g = parseInt(hex.slice(3, 5), 16);
+    var b = parseInt(hex.slice(5, 7), 16);
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+  }
+
+  function lerpColor(hex1, hex2, t) {
+    var r1 = parseInt(hex1.slice(1, 3), 16);
+    var g1 = parseInt(hex1.slice(3, 5), 16);
+    var b1 = parseInt(hex1.slice(5, 7), 16);
+    var r2 = parseInt(hex2.slice(1, 3), 16);
+    var g2 = parseInt(hex2.slice(3, 5), 16);
+    var b2 = parseInt(hex2.slice(5, 7), 16);
+    var r = Math.round(r1 + (r2 - r1) * t);
+    var g = Math.round(g1 + (g2 - g1) * t);
+    var b = Math.round(b1 + (b2 - b1) * t);
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
+
+})(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));
+
+</script>
+<script>
+(function (global) {
+  'use strict';
+
+  var T = global.Taludes;
+  var Calc = T.Calculations;
+  var Geo = T.Geometry;
+  var DEG = Math.PI / 180;
+
+  function deepFreeze(value) {
+    Object.keys(value).forEach(function (key) {
+      if (value[key] && typeof value[key] === 'object') deepFreeze(value[key]);
+    });
+    return Object.freeze(value);
+  }
+
+  var params = {
+    height: 14, slopeAngle: 30, gamma: 16, cohesion: 20, friction: 20,
+    waterTable: 0, dry: true, numSlices: 7, method: 'fellenius',
+    areaIntegration: 'trapezoid', baseGeometry: 'chord', tensionCrack: false, requireAllSlices: true,
+    drainedMode: true, units: 'si'
+  };
+  var run = params.height / Math.tan(params.slopeAngle * DEG);
+  var referenceX = run - 18;
+  var referenceY = params.height + 5;
+  var configuration = deepFreeze({
+    params: params,
+    referenceCircle: { cx: referenceX, cy: referenceY, r: Math.hypot(referenceX, referenceY) },
+    tabulated: [
+      { weight: 22.4, alpha: 70, baseLength: 2.924 },
+      { weight: 294.4, alpha: 54, baseLength: 6.803 },
+      { weight: 435.2, alpha: 38, baseLength: 5.076 },
+      { weight: 435.2, alpha: 24, baseLength: 4.376 },
+      { weight: 390.4, alpha: 12, baseLength: 4.09 },
+      { weight: 268.8, alpha: 0, baseLength: 4 },
+      { weight: 66.58, alpha: -8, baseLength: 3.232 }
+    ]
+  });
+
+  function analyze(circle, countEngine) {
+    var profile = Geo.slopeProfile(params.height, params.slopeAngle);
+    var intersections = Geo.circleIntersections(profile, circle.cx, circle.cy, circle.r);
+    var b = (profile.L - circle.cx) / 4.5;
+    var boundaries = intersections && [intersections.entry.x, circle.cx - 0.5 * b,
+      circle.cx + 0.5 * b, circle.cx + 1.5 * b, circle.cx + 2.5 * b,
+      circle.cx + 3.5 * b, profile.L, intersections.exit.x];
+    var widths = boundaries && boundaries.slice(1).map(function (x, i) { return x - boundaries[i]; });
+    if (!(b > 0) || !widths || !widths.every(function (width) { return Number.isFinite(width) && width > 0; })) {
+      return { valid: false, fs: null, slices: null, converged: false, profile: profile,
+        circle: Object.assign({}, circle), error: 'La geometría no permite siete dovelas de ancho positivo.' };
+    }
+    if (countEngine) countEngine();
+    return Calc.analyze(Object.assign({}, params, {
+      circleX: circle.cx, circleY: circle.cy, circleR: circle.r, sliceWidthRatios: widths
+    }));
+  }
+
+  function eligible(result) {
+    return result && result.valid && result.converged && !result.mAlphaWarning &&
+      result.numSlicesValid === params.numSlices && Number.isFinite(result.fs) && result.fs >= 0;
+  }
+
+  function runReference() {
+    var rows = configuration.tabulated.map(function (row, i) {
+      var angle = row.alpha * DEG;
+      return {
+        index: i, weight: row.weight, alpha: row.alpha, alphaRad: angle,
+        baseLength: row.baseLength, width: row.baseLength * Math.cos(angle),
+        sinAlpha: Math.sin(angle), cosAlpha: Math.cos(angle), hw: 0, porePressure: 0
+      };
+    });
+    var tabulated = Calc.fellenius(rows, params.cohesion, params.friction);
+    tabulated.slices = rows;
+    return { tabulated: tabulated, geometry: analyze(configuration.referenceCircle) };
+  }
+
+  function searchCritical(onProgress) {
+    var H = params.height;
+    var domain = deepFreeze({
+      centerX: [-H, run + H], centerY: [0, H * 4], radius: [H * 0.1, H * 4],
+      budget: 50000, globalMinimumCertified: false,
+      algorithm: 'Malla inicial y refinamiento local en tres variables, con semillas geométricas por el pie.'
+    });
+    var tried = 0;
+    var engineEvaluations = 0;
+    var best = null;
+    var improvements = [];
+    var cache = new Map();
+
+    function progress(stage, candidateFS) {
+      if (typeof onProgress === 'function') onProgress({
+        tried: tried, engineEvaluations: engineEvaluations,
+        bestFS: best ? best.fs : candidateFS, stage: stage
+      });
+    }
+
+    function evaluateCircle(circle) {
+      return analyze(circle, function () { engineEvaluations++; });
+    }
+    var grid = Calc.findCriticalCircle(params, function (state) {
+      tried = state.tried;
+      progress('malla', Number.isFinite(state.bestFS) ? state.bestFS : null);
+    }, function (candidate) {
+      return evaluateCircle({ cx: candidate.circleX, cy: candidate.circleY, r: candidate.circleR });
+    });
+    tried = grid.tried;
+
+    function evaluate(point, stage) {
+      var x = point[0], y = point[1], r = point[2];
+      if (tried >= domain.budget || x < domain.centerX[0] || x > domain.centerX[1] ||
+        y < domain.centerY[0] || y > domain.centerY[1] ||
+        r < domain.radius[0] || r > domain.radius[1]) return null;
+      var key = point.join(',');
+      if (cache.has(key)) return cache.get(key);
+      var result = evaluateCircle({ cx: x, cy: y, r: r });
+      tried++;
+      if (!eligible(result)) result = null;
+      cache.set(key, result);
+      if (result && (!best || result.fs < best.fs)) {
+        best = result;
+        improvements.push({ tried: tried, fs: result.fs, stage: stage,
+          circle: Object.assign({}, result.circle) });
+        progress(stage);
+      } else if (tried % 500 === 0) progress(stage);
+      return result;
+    }
+
+    var seeds = [];
+    if (grid.bestConfig) seeds.push(grid.bestConfig);
+    seeds = seeds.concat(grid.candidates.slice(0, 3));
+    [0.25, 0.35].forEach(function (fraction) {
+      [1.25, 1.5, 1.75].forEach(function (heightRatio) {
+        var x = run * fraction, y = H * heightRatio;
+        seeds.push({ cx: x, cy: y, r: Math.hypot(x, y) });
+      });
+    });
+
+    seeds.forEach(function (seed) {
+      var point = [seed.cx, seed.cy, seed.r];
+      var current = evaluate(point, 'semilla');
+      var step = H * 0.05;
+      var considered = 0;
+      while (step > H * 1e-7 && considered < 4000 && tried < domain.budget) {
+        var next = current, nextPoint = point;
+        function consider(candidate) {
+          considered++;
+          var result = evaluate(candidate, 'refinamiento');
+          if (result && (!next || result.fs < next.fs)) {
+            next = result;
+            nextPoint = candidate;
+          }
+        }
+        // Independent changes in center X, center Y and radius keep the search three-dimensional.
+        for (var dx = -1; dx <= 1; dx++) {
+          for (var dy = -1; dy <= 1; dy++) {
+            for (var dr = -1; dr <= 1; dr++) {
+              if (dx || dy || dr) consider([point[0] + dx * step,
+                point[1] + dy * step, point[2] + dr * step]);
+            }
+          }
+        }
+        // Additional geometric seeds resolve a possible boundary at the toe;
+        // they supplement the free-radius candidates rather than restricting them.
+        for (dx = -1; dx <= 1; dx++) {
+          for (dy = -1; dy <= 1; dy++) {
+            if (!dx && !dy) continue;
+            var x = point[0] + dx * step, y = point[1] + dy * step;
+            consider([x, y, Math.hypot(x, y)]);
+          }
+        }
+        if (nextPoint === point) step /= 2;
+        else { point = nextPoint; current = next; }
+      }
+    });
+    progress('terminado');
+    return { result: best, tried: tried, engineEvaluations: engineEvaluations,
+      domain: domain, improvements: improvements };
+  }
+
+  T.FixedSlopeCase = Object.freeze({
+    configuration: configuration, runReference: runReference, searchCritical: searchCritical
+  });
+})(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));
+
+</script>
+<script>
+(function () {
+  'use strict';
+  var T=window.Taludes, model=T.FixedSlopeCase, view=T.Renderer;
+  var config=model.configuration, params=config.params, circle=config.referenceCircle;
+  var $=function(id){return document.getElementById(id);};
+  var fmt=function(n,d){return Number(n).toLocaleString('es-CL',{minimumFractionDigits:d,maximumFractionDigits:d});};
+  var calculate=$('calculate'),search=$('search'),tabulatedResult=null;
+  var cell=function(text){var td=document.createElement('td');td.textContent=text;return td;};
+  function row(values){var tr=document.createElement('tr');values.forEach(function(v){tr.appendChild(cell(v));});return tr;}
+  function tableData(result){
+    var body=$('tabulated-slices'); body.replaceChildren();
+    config.tabulated.forEach(function(s,i){
+      var computed=result&&result.slices&&result.slices[i];
+      body.appendChild(row([String(i+1),fmt(s.weight,2),fmt(s.alpha,0),fmt(s.baseLength,3),
+        computed?fmt(computed.resistance,3):'—',computed?fmt(computed.shearForce,3):'—']));
+    });
+  }
+  function showGeometry(result,critical){
+    if(!result||!result.valid||result.numSlicesValid!==params.numSlices)throw new Error('No se obtuvo una superficie válida con siete dovelas');
+    view.setResult(result);
+    var color=result.fs>=T.FS_STABLE?'var(--green)':result.fs>=T.FS_CAUTION?'var(--yellow)':'var(--red)';
+    $('fs-value').textContent=fmt(result.fs,2);
+    $('fs-value').style.color=color;
+    $('fs-bar-fill').style.backgroundColor=color;
+    $('fs-bar-fill').style.width=Math.min(100,result.fs/2.5*100)+'%';
+    var title=critical?'Superficie crítica':'Círculo geométrico';
+    $('figure-heading').textContent=title;
+    $('geometric-heading').textContent='Dovelas · '+title.toLowerCase();
+    var output=$('circle-output'); output.replaceChildren(); $('circle-result-section').hidden=false;
+    [['Centro X',result.circle.cx],['Centro Y',result.circle.cy],['Radio',result.circle.r]].forEach(function(p){
+      var wrap=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');
+      dt.textContent=p[0];dd.textContent=fmt(p[1],5)+' m';wrap.append(dt,dd);output.appendChild(wrap);
+    });
+    var body=$('geometric-slices');body.replaceChildren();
+    result.slices.slice().reverse().forEach(function(s,i){
+      body.appendChild(row([String(i+1),fmt(s.width,2),fmt(s.weight,3),fmt(s.alpha,3),fmt(s.baseLength,3),fmt(s.porePressure,0)]));
+    });
+    $('geometric-section').hidden=false;
+  }
+  function runReference(){
+    var result=model.runReference();tabulatedResult=result.tabulated;
+    $('fs-tabulated').textContent=fmt(result.tabulated.fs,5);
+    $('fs-geometry').textContent=fmt(result.geometry.fs,5);
+    tableData(result.tabulated);showGeometry(result.geometry,false);
+    return result;
+  }
+  function error(e){$('error').textContent=e&&e.message?e.message:'No se pudo completar el cálculo';$('error').hidden=false;}
+  calculate.addEventListener('click',function(){
+    $('error').hidden=true;
+    try{runReference();}catch(e){error(e);}
+  });
+  search.addEventListener('click',async function(){
+    $('error').hidden=true; calculate.disabled=true;search.disabled=true;
+    $('progress').textContent='Calculando…';
+    await new Promise(function(resolve){setTimeout(resolve,30);});
+    try{
+      if(!tabulatedResult)runReference();
+      var found=model.searchCritical(function(p){
+        if(p&&Number.isFinite(p.tried))$('progress').textContent=fmt(p.tried,0)+' superficies';
+      });
+      showGeometry(found.result,true);
+      $('fs-critical').textContent=fmt(found.result.fs,5);
+      $('progress').textContent=fmt(found.tried,0)+' superficies';
+    }catch(e){error(e);$('progress').textContent='';}
+    finally{calculate.disabled=false;search.disabled=false;}
+  });
+  $('reference-x').textContent=fmt(circle.cx,5)+' m';
+  $('reference-y').textContent=fmt(circle.cy,5)+' m';
+  $('reference-radius').textContent=fmt(circle.r,5)+' m';
+  view.init($('main-canvas'),$('canvas-container'));
+  view.setDark(false);
+  tableData(null);
+  runReference();
+}());
+
+
+</script>
+</body>
+</html>
+
