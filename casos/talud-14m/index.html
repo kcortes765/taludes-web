@@ -891,16 +891,33 @@ body {
 .case-actions .btn:disabled{opacity:.6;cursor:wait}
 #progress{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
 #error{font-size:12px;color:var(--red);padding:8px;border:1px solid var(--red);border-radius:var(--radius)}
-.case-figure-title{position:absolute;left:12px;top:10px;z-index:1;font-size:12px;font-weight:500;color:var(--text-secondary);background:rgba(255,255,255,.82);padding:4px 8px;border-radius:3px}
-#main-canvas{cursor:default}
+.canvas-wrapper{display:grid;grid-template-rows:auto minmax(180px,1fr) auto}
+.case-view-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;padding:8px 10px;background:var(--bg-panel);border-bottom:1px solid var(--border)}
+.case-figure-title{font-size:11px;font-weight:500;color:var(--text-secondary)}
+#canvas-container{min-height:0;overflow:hidden}
+#main-canvas{cursor:grab;touch-action:none;outline-offset:-3px}
+.case-view-tools{display:flex;justify-content:center;flex-wrap:wrap;gap:4px;padding:7px 8px;background:var(--bg-panel);border-top:1px solid var(--border)}
+.case-view-tools .btn{padding:4px 7px;font-size:10px;min-height:28px}
+.case-view-tools [aria-pressed="true"]{color:var(--accent);background:var(--bg-hover);border-color:var(--accent)}
+.case-tool-separator{width:1px;background:var(--border);margin:2px}
+.case-coordinates{position:absolute;right:8px;bottom:78px;background:var(--bg-panel);border-radius:3px;color:var(--text-secondary);font:10px var(--font-mono);padding:3px 5px;pointer-events:none}
+.case-coordinates:empty{display:none}
+.case-slice-navigation{display:flex;justify-content:space-between;align-items:center;margin:4px 0 8px;gap:8px}
+.case-slice-navigation output{font:12px var(--font-mono);color:var(--text-secondary)}
+.case-slice-detail{padding:8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg)}
 .case-table-wrap{overflow-x:auto}
 .case-circle-output>div{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:11px;margin:5px 0}
 .case-circle-output dt{color:var(--text-secondary)}
 .case-circle-output dd{font-family:var(--font-mono)}
 .case-results output{color:var(--text);font-size:13px}
 .slices-table tr:hover{cursor:default}
+#geometric-slices tr{cursor:pointer}
+#geometric-slices tr.highlighted{box-shadow:inset 3px 0 var(--accent);background:var(--bg-hover)}
+#geometric-slices tr:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.btn:disabled{opacity:.45;cursor:default}
 [hidden]{display:none!important}
-@media(max-width:768px){.panel-left{padding:10px 12px}.case-figure-title{left:8px;top:6px}.case-actions{grid-template-columns:1fr 1fr}.case-actions #progress{grid-column:1/-1}}
+@media(max-width:1100px) and (min-width:769px){.app-main{grid-template-columns:230px minmax(250px,1fr) 285px}.case-view-bar{justify-content:center}.case-title{display:none}}
+@media(max-width:768px){.app-layout{height:auto;min-height:100vh}.app-main{display:flex;flex-direction:column;overflow:visible}.app-header{flex-wrap:wrap;gap:6px}.panel-left{padding:10px 12px;max-height:340px;order:1}.canvas-wrapper{order:2;height:520px;min-height:400px}.panel-right{order:3;max-height:none;overflow:visible}.case-view-bar{padding:6px 8px}.case-actions{grid-template-columns:1fr 1fr}.case-actions #progress{grid-column:1/-1}.case-title{display:none}}
 
 </style>
 </head>
@@ -908,7 +925,12 @@ body {
 <div class="app-layout">
   <header class="app-header">
     <h1>TALUDES</h1>
-    <div class="header-actions"><span class="case-title">Talud de 14 m</span><span class="case-units">SI</span></div>
+    <div class="header-actions">
+      <span class="case-title">Talud de 14 m</span><span class="case-units">SI</span>
+      <button id="theme" class="btn btn-sm" type="button" aria-pressed="false">Oscuro</button>
+      <button id="export-png" class="btn btn-sm" type="button">PNG</button>
+      <button id="export-csv" class="btn btn-sm" type="button">CSV</button>
+    </div>
   </header>
   <main class="app-main">
     <aside class="panel panel-left" id="panel-params">
@@ -947,8 +969,27 @@ body {
       <p id="error" role="alert" hidden></p>
     </aside>
     <section class="canvas-wrapper">
-      <h2 id="figure-heading" class="case-figure-title">Círculo geométrico</h2>
-      <div id="canvas-container"><canvas id="main-canvas"></canvas></div>
+      <div class="case-view-bar">
+        <div class="toggle-group" aria-label="Superficie visible">
+          <button id="show-reference" type="button" class="btn btn-sm active" aria-pressed="true">Referencia</button>
+          <button id="show-critical" type="button" class="btn btn-sm" aria-pressed="false" disabled>Crítica</button>
+        </div>
+        <h2 id="figure-heading" class="case-figure-title">Círculo geométrico</h2>
+      </div>
+      <div id="canvas-container"><canvas id="main-canvas" aria-label="Geometría del talud y dovelas" tabindex="0"></canvas></div>
+      <div class="case-view-tools" role="toolbar" aria-label="Vista del talud">
+        <button type="button" class="btn btn-sm" data-layer="grid" aria-pressed="true">Retícula</button>
+        <button type="button" class="btn btn-sm" data-layer="slices" aria-pressed="true">Dovelas</button>
+        <button type="button" class="btn btn-sm" data-layer="circle" aria-pressed="true">Círculo</button>
+        <button type="button" class="btn btn-sm" data-layer="labels" aria-pressed="true">Números</button>
+        <button type="button" class="btn btn-sm" data-layer="weights" aria-pressed="false">Pesos</button>
+        <button id="compare" type="button" class="btn btn-sm" aria-pressed="false" disabled>Comparar</button>
+        <span class="case-tool-separator"></span>
+        <button id="zoom-out" type="button" class="btn btn-sm" aria-label="Alejar">−</button>
+        <button id="zoom-in" type="button" class="btn btn-sm" aria-label="Acercar">+</button>
+        <button id="reset-view" type="button" class="btn btn-sm">Centrar</button>
+      </div>
+      <output id="coordinates" class="case-coordinates" aria-label="Coordenadas del cursor"></output>
     </section>
     <aside class="panel panel-right" id="panel-results">
       <section class="fs-display">
@@ -965,8 +1006,17 @@ body {
         <h3>Superficie calculada</h3>
         <dl class="case-circle-output" id="circle-output"></dl>
       </section>
+      <section class="panel-section case-slice-detail" aria-label="Dovela seleccionada">
+        <h3 id="slice-title">Dovela</h3>
+        <div class="case-slice-navigation">
+          <button id="slice-prev" type="button" class="btn btn-sm" aria-label="Dovela anterior">←</button>
+          <output id="slice-position"></output>
+          <button id="slice-next" type="button" class="btn btn-sm" aria-label="Dovela siguiente">→</button>
+        </div>
+        <dl id="slice-detail" class="case-circle-output"></dl>
+      </section>
       <section class="panel-section">
-        <h3>Datos de las dovelas</h3>
+        <h3>Datos tabulados</h3>
         <div class="case-table-wrap"><table class="slices-table">
           <thead><tr><th>#</th><th>W<br>(kN/m)</th><th>α<br>(°)</th><th>l<br>(m)</th><th>Resist.<br>(kN/m)</th><th>Motriz<br>(kN/m)</th></tr></thead>
           <tbody id="tabulated-slices"></tbody>
@@ -2000,6 +2050,11 @@ body {
   var _ghostCircles = [];
   var _animating = false;
   var _isDark = false;
+  var _viewOptions = { grid: true, slices: true, circle: true, labels: false, weights: false };
+  var _zoom = 1;
+  var _panX = 0;
+  var _panY = 0;
+  var _baseTransform = null;
 
   Renderer.init = function (canvasEl, containerEl) {
     _canvas = canvasEl;
@@ -2022,6 +2077,7 @@ body {
     _canvas.style.height = rect.height + 'px';
     _ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     _transform = null;
+    _baseTransform = null;
     _needsRender = true;
   };
 
@@ -2048,6 +2104,67 @@ body {
   };
 
   Renderer.requestRender = function () {
+    _needsRender = true;
+  };
+
+  Renderer.setViewOptions = function (options) {
+    if (!options || typeof options !== 'object' || Array.isArray(options)) {
+      throw new TypeError('Opciones de vista no válidas');
+    }
+    var next = Renderer.getViewOptions();
+    Object.keys(next).forEach(function (key) {
+      if (Object.prototype.hasOwnProperty.call(options, key)) {
+        if (typeof options[key] !== 'boolean') throw new TypeError('Capa no válida: ' + key);
+        next[key] = options[key];
+      }
+    });
+    _viewOptions = next;
+    if (!_viewOptions.slices) _hoveredSlice = -1;
+    _needsRender = true;
+    return Renderer.getViewOptions();
+  };
+
+  Renderer.getViewOptions = function () {
+    return {
+      grid: _viewOptions.grid, slices: _viewOptions.slices, circle: _viewOptions.circle,
+      labels: _viewOptions.labels, weights: _viewOptions.weights
+    };
+  };
+
+  Renderer.zoomAt = function (factor, px, py) {
+    if (!Number.isFinite(factor) || factor <= 0 || !Number.isFinite(px) || !Number.isFinite(py)) return _zoom;
+    var current = updateTransform();
+    if (!current) return _zoom;
+    var world = c2w(current, px, py);
+    var nextZoom = Math.max(0.6, Math.min(4, _zoom * factor));
+    var nextPanX = px - _baseTransform.ox - (world.x - _baseTransform.minX) * _baseTransform.scale * nextZoom;
+    var nextPanY = py - _baseTransform.oy - (_baseTransform.maxY - world.y) * _baseTransform.scale * nextZoom;
+    if (!Number.isFinite(nextPanX) || !Number.isFinite(nextPanY)) return _zoom;
+    _zoom = nextZoom;
+    _panX = nextPanX;
+    _panY = nextPanY;
+    updateTransform();
+    _needsRender = true;
+    return _zoom;
+  };
+
+  Renderer.panBy = function (dx, dy) {
+    if (!Number.isFinite(dx) || !Number.isFinite(dy)) return false;
+    var nextPanX = _panX + dx;
+    var nextPanY = _panY + dy;
+    if (!Number.isFinite(nextPanX) || !Number.isFinite(nextPanY)) return false;
+    _panX = nextPanX;
+    _panY = nextPanY;
+    updateTransform();
+    _needsRender = true;
+    return true;
+  };
+
+  Renderer.resetView = function () {
+    _zoom = 1;
+    _panX = 0;
+    _panY = 0;
+    updateTransform();
     _needsRender = true;
   };
 
@@ -2086,6 +2203,25 @@ body {
     };
   }
 
+  function updateTransform() {
+    var result = _lastResult;
+    if (!_canvas || !result || !result.profile || !result.circle ||
+        ![result.circle.cx, result.circle.cy, result.circle.r].every(Number.isFinite)) {
+      _baseTransform = null;
+      _transform = null;
+      return null;
+    }
+    var bounds = T.Geometry.worldBounds(result.profile, result.circle.cx, result.circle.cy, result.circle.r);
+    _baseTransform = computeTransform(bounds);
+    _transform = {
+      scale: _baseTransform.scale * _zoom,
+      ox: _baseTransform.ox + _panX, oy: _baseTransform.oy + _panY,
+      minX: _baseTransform.minX, maxY: _baseTransform.maxY,
+      cw: _baseTransform.cw, ch: _baseTransform.ch
+    };
+    return _transform;
+  }
+
   Renderer.canvasToWorld = function (px, py) {
     if (!_transform) return { x: 0, y: 0 };
     return c2w(_transform, px, py);
@@ -2120,9 +2256,7 @@ body {
     }
 
     // Compute bounds & transform
-    var bounds = T.Geometry.worldBounds(res.profile, res.circle.cx, res.circle.cy, res.circle.r);
-    _transform = computeTransform(bounds);
-    var tx = _transform;
+    var tx = updateTransform();
 
     // Clear
     _ctx.clearRect(0, 0, cw, ch);
@@ -2135,7 +2269,7 @@ body {
     _ctx.fillRect(0, 0, cw, ch);
 
     // Grid dots
-    drawGrid(tx, cw, ch);
+    if (_viewOptions.grid) drawGrid(tx, cw, ch);
 
     // Water table (behind soil)
     if (res.waterTable > 0) drawWater(tx, res);
@@ -2144,16 +2278,20 @@ body {
     drawSoil(tx, res);
 
     // Failure circle
-    drawFailureCircle(tx, res);
+    if (_viewOptions.circle) drawFailureCircle(tx, res);
 
     // Ghost circles (search animation)
-    if (_ghostCircles.length > 0) drawGhostCircles(tx, res);
+    if (_viewOptions.circle && _ghostCircles.length > 0) drawGhostCircles(tx, res);
 
     // Slices
-    if (res.slices) drawSlices(tx, res);
+    if (_viewOptions.slices && res.slices) {
+      drawSlices(tx, res);
+      if (_viewOptions.labels) drawSliceLabels(tx, res);
+      if (_viewOptions.weights) drawSliceWeights(tx, res);
+    }
 
     // Circle center mark
-    drawCenter(tx, res.circle.cx, res.circle.cy);
+    if (_viewOptions.circle) drawCenter(tx, res.circle.cx, res.circle.cy);
 
     // Scale bar
     drawScaleBar(tx, cw, ch);
@@ -2176,6 +2314,14 @@ body {
     var endX = tx.minX + cw / tx.scale;
     var startY = Math.floor((tx.maxY - ch / tx.scale) / spacing) * spacing;
     var endY = tx.maxY;
+    if (_zoom !== 1 || _panX !== 0 || _panY !== 0) {
+      var visibleTopLeft = c2w(tx, 0, 0);
+      var visibleBottomRight = c2w(tx, cw, ch);
+      startX = Math.floor(visibleTopLeft.x / spacing) * spacing;
+      endX = visibleBottomRight.x;
+      startY = Math.floor(visibleBottomRight.y / spacing) * spacing;
+      endY = visibleTopLeft.y;
+    }
 
     for (var x = startX; x <= endX; x += spacing) {
       for (var y = startY; y <= endY; y += spacing) {
@@ -2430,6 +2576,69 @@ body {
     }
   }
 
+  function straightBase(result) {
+    return result.baseGeometry === 'chord' ||
+      (result.params && result.params.baseGeometry === 'chord');
+  }
+
+  function interpolateEdge(left, right, x) {
+    if (!left || !right || ![left.x, left.y, right.x, right.y].every(Number.isFinite) || right.x <= left.x) return null;
+    return left.y + (right.y - left.y) * (x - left.x) / (right.x - left.x);
+  }
+
+  function slicePosition(result, slice) {
+    var x = (slice.xLeft + slice.xRight) / 2;
+    var upper = T.Geometry.surfaceY(result.profile, x);
+    var lower = slice.yBottom;
+    if (straightBase(result)) {
+      var top = interpolateEdge(slice.topLeft, slice.topRight, x);
+      var base = interpolateEdge(slice.botLeft, slice.botRight, x);
+      if (top !== null) upper = top;
+      if (base !== null) lower = base;
+    }
+    return { x: x, upper: upper, lower: lower };
+  }
+
+  function drawSliceLabels(tx, res) {
+    _ctx.save();
+    _ctx.font = '600 12px system-ui, sans-serif';
+    _ctx.textAlign = 'center';
+    _ctx.textBaseline = 'middle';
+    for (var i = 0; i < res.slices.length; i++) {
+      var position = slicePosition(res, res.slices[i]);
+      var p = w2c(tx, position.x, position.upper - (position.upper - position.lower) * 0.24);
+      _ctx.fillStyle = _isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)';
+      _ctx.fillRect(p.x - 8, p.y - 8, 16, 16);
+      _ctx.fillStyle = _isDark ? '#eee' : '#222';
+      _ctx.fillText(String(res.slices.length - i), p.x, p.y);
+    }
+    _ctx.restore();
+  }
+
+  function drawSliceWeights(tx, res) {
+    _ctx.save();
+    _ctx.strokeStyle = _isDark ? '#eee' : '#222';
+    _ctx.fillStyle = _isDark ? '#eee' : '#222';
+    _ctx.lineWidth = 1.4;
+    _ctx.font = '11px system-ui, sans-serif';
+    _ctx.textAlign = 'left';
+    _ctx.textBaseline = 'middle';
+    for (var i = 0; i < res.slices.length; i++) {
+      var position = slicePosition(res, res.slices[i]);
+      var p = w2c(tx, position.x, (position.upper + position.lower) / 2);
+      var endY = p.y + 28;
+      _ctx.beginPath();
+      _ctx.moveTo(p.x, p.y);
+      _ctx.lineTo(p.x, endY);
+      _ctx.moveTo(p.x - 4, endY - 7);
+      _ctx.lineTo(p.x, endY);
+      _ctx.lineTo(p.x + 4, endY - 7);
+      _ctx.stroke();
+      _ctx.fillText('W' + (res.slices.length - i), p.x + 7, p.y + 12);
+    }
+    _ctx.restore();
+  }
+
   function drawWaterPattern(tx, s, tl, tr, br, bl) {
     _ctx.save();
     _ctx.strokeStyle = 'rgba(91,155,213,0.3)';
@@ -2522,15 +2731,24 @@ body {
 
   // --- Hit Testing ---
   Renderer.hitTestSlice = function (wx, wy) {
-    if (!_lastResult || !_lastResult.slices) return -1;
+    if (!_viewOptions.slices || !_lastResult || !_lastResult.slices) return -1;
     var slices = _lastResult.slices;
     for (var i = 0; i < slices.length; i++) {
       var s = slices[i];
       if (wx >= s.xLeft && wx <= s.xRight) {
         var yTop = T.Geometry.surfaceY(_lastResult.profile, wx);
-        var dx = wx - _lastResult.circle.cx;
-        var disc = _lastResult.circle.r * _lastResult.circle.r - dx * dx;
-        var yBot = disc >= 0 ? _lastResult.circle.cy - Math.sqrt(disc) : -999;
+        var yBot;
+        if (straightBase(_lastResult)) {
+          yBot = interpolateEdge(s.botLeft, s.botRight, wx);
+          var polygonTop = interpolateEdge(s.topLeft, s.topRight, wx);
+          if (yBot === null) continue;
+          if (polygonTop !== null) yTop = polygonTop;
+        } else {
+          var dx = wx - _lastResult.circle.cx;
+          var disc = _lastResult.circle.r * _lastResult.circle.r - dx * dx;
+          if (disc < 0) continue;
+          yBot = _lastResult.circle.cy - Math.sqrt(disc);
+        }
         if (wy >= yBot && wy <= yTop) return i;
       }
     }
@@ -2754,6 +2972,9 @@ body {
   var $=function(id){return document.getElementById(id);};
   var fmt=function(n,d){return Number(n).toLocaleString('es-CL',{minimumFractionDigits:d,maximumFractionDigits:d});};
   var calculate=$('calculate'),search=$('search'),tabulatedResult=null;
+  var referenceResult=null,criticalResult=null,activeResult=null,isCritical=false;
+  var selectedSlice=3,hoveredSlice=-1,comparing=false,dark=false;
+  var canvas=$('main-canvas'),drag=null;
   var cell=function(text){var td=document.createElement('td');td.textContent=text;return td;};
   function row(values){var tr=document.createElement('tr');values.forEach(function(v){tr.appendChild(cell(v));});return tr;}
   function tableData(result){
@@ -2764,9 +2985,48 @@ body {
         computed?fmt(computed.resistance,3):'—',computed?fmt(computed.shearForce,3):'—']));
     });
   }
+  function valuesList(target,values){
+    target.replaceChildren();
+    values.forEach(function(p){
+      var wrap=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');
+      dt.textContent=p[0];dd.textContent=p[1];wrap.append(dt,dd);target.appendChild(wrap);
+    });
+  }
+  function detail(index){
+    if(!activeResult||index<0)return;
+    var s=activeResult.slices[index],number=activeResult.slices.length-index;
+    $('slice-title').textContent='Dovela '+number;
+    $('slice-position').textContent=number+' / '+activeResult.slices.length;
+    valuesList($('slice-detail'),[
+      ['Ancho b',fmt(s.width,3)+' m'],['Peso W',fmt(s.weight,3)+' kN/m'],
+      ['Ángulo α',fmt(s.alpha,3)+'°'],['Base l',fmt(s.baseLength,3)+' m'],
+      ['Resistencia',fmt(s.resistance,3)+' kN/m'],['Fuerza motriz',fmt(s.shearForce,3)+' kN/m']
+    ]);
+    Array.from($('geometric-slices').children).forEach(function(tr){
+      var matching=Number(tr.dataset.slice)===index;
+      tr.classList.toggle('highlighted',matching);tr.setAttribute('aria-selected',String(matching));
+    });
+    view.setHoveredSlice(index);
+  }
+  function selectSlice(index){
+    selectedSlice=index;hoveredSlice=-1;detail(index);
+  }
+  function hoverSlice(index){
+    if(hoveredSlice===index)return;
+    hoveredSlice=index;detail(index>=0?index:selectedSlice);
+  }
+  function compareCircles(){
+    var other=isCritical?referenceResult:criticalResult;
+    view.setGhostCircles(comparing&&other?[Object.assign({},other.circle,{opacity:.55,showFS:true,fs:other.fs})]:[]);
+  }
   function showGeometry(result,critical){
     if(!result||!result.valid||result.numSlicesValid!==params.numSlices)throw new Error('No se obtuvo una superficie válida con siete dovelas');
-    view.setResult(result);
+    activeResult=result;isCritical=critical;view.setResult(result);
+    selectedSlice=Math.max(0,Math.min(selectedSlice,result.slices.length-1));hoveredSlice=-1;
+    $('show-reference').classList.toggle('active',!critical);
+    $('show-reference').setAttribute('aria-pressed',String(!critical));
+    $('show-critical').classList.toggle('active',critical);
+    $('show-critical').setAttribute('aria-pressed',String(critical));
     var color=result.fs>=T.FS_STABLE?'var(--green)':result.fs>=T.FS_CAUTION?'var(--yellow)':'var(--red)';
     $('fs-value').textContent=fmt(result.fs,2);
     $('fs-value').style.color=color;
@@ -2775,19 +3035,24 @@ body {
     var title=critical?'Superficie crítica':'Círculo geométrico';
     $('figure-heading').textContent=title;
     $('geometric-heading').textContent='Dovelas · '+title.toLowerCase();
-    var output=$('circle-output'); output.replaceChildren(); $('circle-result-section').hidden=false;
-    [['Centro X',result.circle.cx],['Centro Y',result.circle.cy],['Radio',result.circle.r]].forEach(function(p){
-      var wrap=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');
-      dt.textContent=p[0];dd.textContent=fmt(p[1],5)+' m';wrap.append(dt,dd);output.appendChild(wrap);
-    });
+    $('circle-result-section').hidden=false;
+    valuesList($('circle-output'),[['Centro X',fmt(result.circle.cx,5)+' m'],
+      ['Centro Y',fmt(result.circle.cy,5)+' m'],['Radio',fmt(result.circle.r,5)+' m']]);
     var body=$('geometric-slices');body.replaceChildren();
     result.slices.slice().reverse().forEach(function(s,i){
-      body.appendChild(row([String(i+1),fmt(s.width,2),fmt(s.weight,3),fmt(s.alpha,3),fmt(s.baseLength,3),fmt(s.porePressure,0)]));
+      var index=result.slices.length-1-i;
+      var tr=row([String(i+1),fmt(s.width,2),fmt(s.weight,3),fmt(s.alpha,3),fmt(s.baseLength,3),fmt(s.porePressure,0)]);
+      tr.dataset.slice=String(index);tr.tabIndex=0;tr.setAttribute('aria-label','Dovela '+(i+1));
+      tr.addEventListener('mouseenter',function(){hoverSlice(index);});
+      tr.addEventListener('mouseleave',function(){hoverSlice(-1);});
+      tr.addEventListener('click',function(){selectSlice(index);});
+      tr.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();selectSlice(index);}});
+      body.appendChild(tr);
     });
-    $('geometric-section').hidden=false;
+    $('geometric-section').hidden=false;detail(selectedSlice);compareCircles();
   }
   function runReference(){
-    var result=model.runReference();tabulatedResult=result.tabulated;
+    var result=model.runReference();tabulatedResult=result.tabulated;referenceResult=result.geometry;
     $('fs-tabulated').textContent=fmt(result.tabulated.fs,5);
     $('fs-geometry').textContent=fmt(result.geometry.fs,5);
     tableData(result.tabulated);showGeometry(result.geometry,false);
@@ -2807,17 +3072,103 @@ body {
       var found=model.searchCritical(function(p){
         if(p&&Number.isFinite(p.tried))$('progress').textContent=fmt(p.tried,0)+' superficies';
       });
-      showGeometry(found.result,true);
+      criticalResult=found.result;
+      $('show-critical').disabled=false;$('compare').disabled=false;
+      showGeometry(criticalResult,true);
       $('fs-critical').textContent=fmt(found.result.fs,5);
       $('progress').textContent=fmt(found.tried,0)+' superficies';
     }catch(e){error(e);$('progress').textContent='';}
     finally{calculate.disabled=false;search.disabled=false;}
+  });
+  $('show-reference').addEventListener('click',function(){if(referenceResult)showGeometry(referenceResult,false);});
+  $('show-critical').addEventListener('click',function(){if(criticalResult)showGeometry(criticalResult,true);});
+  $('compare').addEventListener('click',function(){
+    comparing=!comparing;this.setAttribute('aria-pressed',String(comparing));compareCircles();
+  });
+  Array.from(document.querySelectorAll('[data-layer]')).forEach(function(button){
+    button.addEventListener('click',function(){
+      var enabled=this.getAttribute('aria-pressed')!=='true',options={};
+      options[this.dataset.layer]=enabled;this.setAttribute('aria-pressed',String(enabled));
+      view.setViewOptions(options);
+      if(this.dataset.layer==='slices'&&!enabled)hoverSlice(-1);
+    });
+  });
+  $('slice-prev').addEventListener('click',function(){selectSlice((selectedSlice+1)%activeResult.slices.length);});
+  $('slice-next').addEventListener('click',function(){selectSlice((selectedSlice+activeResult.slices.length-1)%activeResult.slices.length);});
+  $('zoom-in').addEventListener('click',function(){view.zoomAt(1.25,canvas.clientWidth/2,canvas.clientHeight/2);});
+  $('zoom-out').addEventListener('click',function(){view.zoomAt(.8,canvas.clientWidth/2,canvas.clientHeight/2);});
+  $('reset-view').addEventListener('click',function(){view.resetView();$('coordinates').textContent='';});
+  $('theme').addEventListener('click',function(){
+    dark=!dark;document.documentElement.dataset.theme=dark?'dark':'light';view.setDark(dark);
+    this.textContent=dark?'Claro':'Oscuro';this.setAttribute('aria-pressed',String(dark));
+  });
+  function pointer(e){var rect=canvas.getBoundingClientRect();return{x:e.clientX-rect.left,y:e.clientY-rect.top};}
+  canvas.addEventListener('pointerdown',function(e){
+    if(e.button!==0)return;
+    drag={x:e.clientX,y:e.clientY,moved:false};canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove',function(e){
+    var point=pointer(e),world=view.canvasToWorld(point.x,point.y);
+    $('coordinates').textContent='X '+fmt(world.x,2)+' m · Y '+fmt(world.y,2)+' m';
+    if(drag){
+      var dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+      if(Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;
+      if(drag.moved){view.panBy(dx,dy);drag.x=e.clientX;drag.y=e.clientY;canvas.style.cursor='grabbing';}
+      return;
+    }
+    var index=view.hitTestSlice(world.x,world.y);hoverSlice(index);canvas.style.cursor=index>=0?'pointer':'grab';
+  });
+  canvas.addEventListener('pointerup',function(e){
+    if(!drag)return;
+    var moved=drag.moved;drag=null;
+    if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);
+    canvas.style.cursor='grab';
+    if(!moved){var p=pointer(e),world=view.canvasToWorld(p.x,p.y),index=view.hitTestSlice(world.x,world.y);if(index>=0)selectSlice(index);}
+  });
+  canvas.addEventListener('pointercancel',function(){drag=null;hoverSlice(-1);canvas.style.cursor='grab';});
+  canvas.addEventListener('pointerleave',function(){if(!drag){hoverSlice(-1);$('coordinates').textContent='';}});
+  canvas.addEventListener('wheel',function(e){
+    e.preventDefault();var p=pointer(e);view.zoomAt(e.deltaY<0?1.12:1/1.12,p.x,p.y);
+  },{passive:false});
+  canvas.addEventListener('keydown',function(e){
+    var pan={ArrowLeft:[20,0],ArrowRight:[-20,0],ArrowUp:[0,20],ArrowDown:[0,-20]}[e.key];
+    if(pan){e.preventDefault();view.panBy(pan[0],pan[1]);}
+    else if(e.key==='+'||e.key==='='){$('zoom-in').click();e.preventDefault();}
+    else if(e.key==='-'){$('zoom-out').click();e.preventDefault();}
+    else if(e.key==='Home'){view.resetView();e.preventDefault();}
+  });
+  function download(blob,name){
+    var url=URL.createObjectURL(blob),link=document.createElement('a');
+    link.href=url;link.download=name;document.body.appendChild(link);link.click();link.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  }
+  $('export-csv').addEventListener('click',function(){
+    if(!activeResult)return;
+    var lines=[['superficie','FS','centro_x_m','centro_y_m','radio_m'],
+      [isCritical?'critica':'referencia',activeResult.fs,activeResult.circle.cx,activeResult.circle.cy,activeResult.circle.r],
+      [],['dovela','b_m','W_kN_m','alpha_grados','base_m','u_kPa','resistencia_kN_m','motriz_kN_m']];
+    activeResult.slices.slice().reverse().forEach(function(s,i){lines.push([i+1,s.width,s.weight,s.alpha,s.baseLength,s.porePressure,s.resistance,s.shearForce]);});
+    download(new Blob(['\uFEFF'+lines.map(function(line){return line.join(';');}).join('\r\n')],{type:'text/csv;charset=utf-8'}),
+      'talud-14m-'+(isCritical?'critica':'referencia')+'.csv');
+  });
+  $('export-png').addEventListener('click',function(){
+    if(!activeResult)return;
+    requestAnimationFrame(function(){
+      var image=document.createElement('canvas'),ratio=window.devicePixelRatio||1;
+      image.width=canvas.width;image.height=canvas.height+76*ratio;
+      var ctx=image.getContext('2d');ctx.fillStyle=dark?'#1e1e1e':'#ffffff';ctx.fillRect(0,0,image.width,image.height);
+      ctx.drawImage(canvas,0,76*ratio);ctx.scale(ratio,ratio);ctx.fillStyle=dark?'#eeeeee':'#333333';
+      ctx.font='600 15px system-ui';ctx.fillText('Talud de 14 m · '+(isCritical?'Superficie crítica':'Círculo de referencia')+' · FS '+fmt(activeResult.fs,5),16,25);
+      ctx.font='12px system-ui';ctx.fillText('Fellenius · 7 dovelas · H 14 m · β 30° · γ 16 kN/m³ · c′ 20 kPa · φ′ 20° · u 0 kPa',16,48);
+      image.toBlob(function(blob){if(blob)download(blob,'talud-14m-'+(isCritical?'critica':'referencia')+'.png');},'image/png');
+    });
   });
   $('reference-x').textContent=fmt(circle.cx,5)+' m';
   $('reference-y').textContent=fmt(circle.cy,5)+' m';
   $('reference-radius').textContent=fmt(circle.r,5)+' m';
   view.init($('main-canvas'),$('canvas-container'));
   view.setDark(false);
+  view.setViewOptions({labels:true});
   tableData(null);
   runReference();
 }());
